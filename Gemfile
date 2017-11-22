@@ -1,0 +1,5 @@
+source 'https://rubygems.org'
+gem 'rake', '~>12.3.0'
+gem 'yard', '~>0.9.12'
+gem 'rest-client', '~>2.0.2'
+gem 'slugify', '~>1.0.7'
