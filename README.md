@@ -4,7 +4,7 @@ This is a wrapper library to access Kinetic Data application APIs from Ruby with
 
 ## Requirements
 
-See the [REQUIREMENTS](/reference/REQUIREMENTS.md) doc for a list of requirements.
+See the [REQUIREMENTS](/REQUIREMENTS.md) document for a list of requirements to use this library.
 
 ## Kinetic Data Applications
 
@@ -99,7 +99,7 @@ task_sdk.method_foo()
 
 ## Additional Documentation
 
-The RDoc documentation can be generated RDoc by running the rake command.  This will provide detailed information for each module, class, and method.  The output can be found in the generated [doc](doc/index.html) directory.
+The RDoc documentation can be generated RDoc by running the rake command.  This will provide detailed information for each module, class, and method.  The output can be found in the generated `doc` directory.
 
 ```ruby
 bundle exec rake yard
