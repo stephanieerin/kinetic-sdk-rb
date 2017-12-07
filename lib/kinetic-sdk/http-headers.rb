@@ -9,7 +9,7 @@ module KineticSdk
     # @param password [String] password associated to the username
     # @return [Hash] Authorization: Basic base64 hash of username and password
     def header_basic_auth(username=@login, password=@password)
-      { :Authorization => Base64.encode64(username + ":" + password) }
+      { :Authorization => Base64.encode64(username + ":" + password).gsub("\n", "") }
     end
 
     # Provides a content-type header set to application/json
