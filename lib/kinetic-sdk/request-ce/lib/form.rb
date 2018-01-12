@@ -1,7 +1,7 @@
 module KineticSdk
   class RequestCe
 
-    # Create a Form
+    # Add a Form
     #
     # @param kapp_slug [String] slug of the Kapp the form belongs to
     # @param form_properties [Hash] form properties
@@ -19,9 +19,9 @@ module KineticSdk
     #   - +pages+
     #   - +securityPolicies+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def create_form(kapp_slug, form_properties={}, headers=default_headers)
-      puts "Creating the \"#{form_properties['name']}\" Form."
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def add_form(kapp_slug, form_properties={}, headers=default_headers)
+      info("Adding the \"#{form_properties['name']}\" Form.")
       post("#{@api_url}/kapps/#{kapp_slug}/forms", form_properties, headers)
     end
 
@@ -30,9 +30,9 @@ module KineticSdk
     # @param kapp_slug [String] slug of the Kapp the form belongs to
     # @param form_slug [String] slug of the form
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_form(kapp_slug, form_slug, headers=default_headers)
-      puts "Deleting the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp."
+      info("Deleting the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp.")
       delete("#{@api_url}/kapps/#{kapp_slug}/forms/#{form_slug}", headers)
     end
 
@@ -41,32 +41,32 @@ module KineticSdk
     # @param kapp_slug [String] slug of the Kapp the form belongs to
     # @param form_slug [String] slug of the form
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def export_form(kapp_slug, form_slug, headers=default_headers)
-      puts "Exporting the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp."
+      info("Exporting the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp.")
       get("#{@api_url}/kapps/#{kapp_slug}/forms/#{form_slug}", { 'export' => true }, headers)
     end
 
-    # List Forms
+    # Find Forms
     #
     # @param kapp_slug [String] slug of the Kapp the forms belongs to
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def list_forms(kapp_slug, params={}, headers=default_headers)
-      puts "Listing Forms."
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_forms(kapp_slug, params={}, headers=default_headers)
+      info("Finding Forms.")
       get("#{@api_url}/kapps/#{kapp_slug}/forms", params, headers)
     end
 
-    # Retrieve a Form
+    # Find a Form
     #
     # @param kapp_slug [String] slug of the Kapp the form belongs to
     # @param form_slug [String] slug of the form
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_form(kapp_slug, form_slug, params={}, headers=default_headers)
-      puts "Retrieving the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp."
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_form(kapp_slug, form_slug, params={}, headers=default_headers)
+      info("Finding the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp.")
       get("#{@api_url}/kapps/#{kapp_slug}/forms/#{form_slug}", params, headers)
     end
 
@@ -89,9 +89,9 @@ module KineticSdk
     #   - +pages+
     #   - +securityPolicies+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_form(kapp_slug, form_slug, properties={}, headers=default_headers)
-      puts "Updating the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp."
+      info("Updating the \"#{form_slug}\" Form in the \"#{kapp_slug}\" Kapp.")
       put("#{@api_url}/kapps/#{kapp_slug}/forms/#{form_slug}", properties, headers)
     end
 

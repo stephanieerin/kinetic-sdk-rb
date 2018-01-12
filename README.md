@@ -1,31 +1,65 @@
 # Ruby SDK for Kinetic Data application APIs
 
-This is a wrapper library to access Kinetic Data application APIs from Ruby without having to make explicit HTTP requests.
+This library allows access to Kinetic Data application APIs from Ruby without having to write explicit HTTP requests.
 
-## Requirements
+## About
 
-See the [REQUIREMENTS](/REQUIREMENTS.md) document for a list of requirements to use this library.
+The Kinetic Ruby SDK is a library that consists of and SDK for each supported Kinetic Data application, and a helper HTTP library to make the HTTP requests.
 
-## Kinetic Data Applications
+### Supported Applications
+
+The following Kinetic Data applications are supported in this SDK library:
 
 - Kinetic Request CE 1.0.4+
 - Kinetic Task 4.0+
 - Kinetic Bridgehub 1.0+
 - Kinetic Filehub 1.0+
 
-## About
+## Getting Started
 
-To use the SDK library, simply require the kinetic-sdk.rb file in your application:
+See the [Getting Started Guide](docs/GettingStarted.md) for getting started quickly.
 
-```ruby
-require 'kinetic-sdk-rb/kinetic-sdk'
+## Requirements
+
+The following are a list of requirements to use this SDK
+
+### Ruby 2.0+
+
+The Kinetic Ruby SDK requires Ruby 2.0+, which includes JRuby 9000+.  You can determine the version of Ruby you are using with the following command:
+
+```bash
+ruby -v
 ```
+
+### Bundler Gem
+
+A [Gemfile](./Gemfile) is provided to automatically install the required gems using bundler.  This first requires that the bundler gem is installed.  Once bundler is installed, the rest of the gems can be installed.
+
+Install the Bundler gem:
+
+    gem install bundler
+
+*IMPORTANT NOTE*: If using [rbenv](https://github.com/rbenv/rbenv) to manage Ruby versions, run the following command.
+
+    rbenv rehash
+
+Finally, install the dependency gems:
+
+    bundle install
+
+### Dependency Gems
+
+The Kinetic Ruby SDK uses the following gems:
+
+- [mime-types](https://github.com/mime-types/ruby-mime-types) used by the multipart-post gem.
+- [multipart-post](https://github.com/nicksieger/multipart-post) for uploading files to the application REST APIs.
+- [slugify](https://github.com/Slicertje/Slugify) for converting names to slugs.
 
 ## Usage
 
-Each application SDK is meant to be used independent of the other applications. With this in mind, each application SDK must be initialized individually.
+Each Kinetic Data application SDK is meant to be used independent of other application SDKs. With this in mind, each application SDK must be initialized individually.
 
-- Kinetic BridgeHub SDK example:
+**Kinetic BridgeHub SDK example:**
 
 ```ruby
 bridgehub_sdk = KineticSdk::Bridgehub.new({
@@ -33,13 +67,14 @@ bridgehub_sdk = KineticSdk::Bridgehub.new({
   login: "configuration-user",
   password: "password",
   options: {
-    log_level: "debug"
+    log_level: "info",
+    max_redirects: 10
   }
 })
 bridgehub_sdk.method_foo()
 ```
 
-- Kinetic FileHub SDK example:
+**Kinetic FileHub SDK example:**
 
 ```ruby
 filehub_sdk = KineticSdk::Filehub.new({
@@ -47,13 +82,14 @@ filehub_sdk = KineticSdk::Filehub.new({
   login: "configuration-user",
   password: "password",
   options: {
-    log_level: "debug"
+    log_level: "info",
+    max_redirects: 10
   }
 })
 filehub_sdk.method_foo()
 ```
 
-- Kinetic Request CE SDK example of a Space User:
+**Kinetic Request CE SDK example of a Space User:**
 
 ```ruby
 space_sdk = KineticSdk::RequestCe.new({
@@ -62,13 +98,14 @@ space_sdk = KineticSdk::RequestCe.new({
   login: "space-user-1",
   password: "password",
   options: {
-    log_level: "debug"
+    log_level: "info",
+    max_redirects: 10
   }
 })
 space_sdk.method_foo()
 ```
 
-- Kinetic Request CE SDK example of a System User:
+**Kinetic Request CE SDK example of a System User:**
 
 ```ruby
 system_sdk = KineticSdk::RequestCe.new({
@@ -76,13 +113,14 @@ system_sdk = KineticSdk::RequestCe.new({
   login: "configuration-user",
   password: "password",
   options: {
-    log_level: "debug"
+    log_level: "info",
+    max_redirects: 10
   }
 })
 system_sdk.method_foo()
 ```
 
-- Kinetic Task SDK example:
+**Kinetic Task SDK example:**
 
 ```ruby
 task_sdk = KineticSdk::Task.new({
@@ -90,17 +128,68 @@ task_sdk = KineticSdk::Task.new({
   login: "user-1",
   password: "password",
   options: {
-    log_level: "debug",
-    export_directory: "/opt/exports/task-server-a"
+    export_directory: "/opt/exports/task-server-a",
+    log_level: "info",
+    max_redirects: 10
   }
 })
 task_sdk.method_foo()
 ```
 
-## Additional Documentation
+## Advanced Usage
 
-The RDoc documentation can be generated RDoc by running the rake command.  This will provide detailed information for each module, class, and method.  The output can be found in the generated `doc` directory.
+If you need to make a custom HTTP call for some reason, there is a class that allows you to do that. Simply make sure the KineticSdk is required in your program:
 
 ```ruby
-bundle exec rake yard
+require 'kinetic-sdk-rb'
+```
+
+Then you need to instantiate a new instance of the KineticHttp class, and call the desired HTTP method with the appropriate information.  Each response will be returned as a KineticSdk::Utils::KineticHttpResponse object.
+
+```ruby
+# instantiate the KineticHttp class with Basic authentication credentials
+http = KineticSdk::Utils::KineticHttp.new("john.doe@company.com", "s3cretP@ssw0rd")
+
+# call the appropriate method
+
+# custom HTTP delete
+response = http.delete("https://my-server.com", default_headers)
+
+# custom HTTP get
+response = http.get(
+  "https://my-server.com",
+  { foo: 'foo', bar: 'bar' },
+  default_headers)
+
+# custom HTTP patch
+response = http.patch(
+  "https://my-server.com",
+  { foo: 'foo', bar: 'bar' },
+  default_headers)
+
+# custom HTTP post
+response = http.post(
+  "https://my-server.com",
+  { foo: 'foo', bar: 'bar' },
+  { "Custom Header" => "value" }.merge(default_headers))
+
+# custom HTTP post multipart/form-data (for file uploads)
+response = http.post_multipart(
+  "https://my-server.com",
+  { file: File.new('/path/file.txt', rb) },
+  { "Custom Header" => "value" }.merge(default_headers))
+
+# custom HTTP put
+response = http.put(
+  "https://my-server.com",
+  { foo: 'foo', bar: 'bar' },
+  default_headers)
+```
+
+## Additional Documentation
+
+The RDoc documentation can be generated by running the rake command.  This will provide detailed information for each module, class, and method.  The output can be found in the generated `rdoc` directory.
+
+```ruby
+bundle exec rake doc
 ```

@@ -5,7 +5,7 @@ module KineticSdk
     #
     # @param db [Hash] Database configuration seettings to send as the request body
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -21,9 +21,9 @@ module KineticSdk
     #     }
     #
     def test_db_connection(db={}, headers=default_headers)
-      puts "Testing database connection"
+      info("Testing database connection")
       response = post("#{@api_url}/setup/db/test", db, headers)
-      response.body
+      response.content
     end
 
 
@@ -31,7 +31,7 @@ module KineticSdk
     #
     # @param db [Hash] Database configuration seettings to send as the request body
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     # 
@@ -47,9 +47,9 @@ module KineticSdk
     #     }
     #
     def migrate_db(db={}, headers=default_headers)
-      puts "Running database migrations"
+      info("Running database migrations")
       response = post("#{@api_url}/setup/db/migrate", db, headers)
-      response.body
+      response.content
     end
 
   end

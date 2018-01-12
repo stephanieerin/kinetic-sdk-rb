@@ -1,7 +1,7 @@
 module KineticSdk
   class Filehub
 
-    # Create a Filestore
+    # Add a Filestore
     #
     # @param payload [Hash] properties for the bridge
     #   - +accessKeys+
@@ -10,9 +10,9 @@ module KineticSdk
     #   - +properties+
     #   - +slug+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def create_filestore(payload, headers=default_headers)
-      puts "Creating Filestore \"#{payload['name']}\" with slug \"#{payload['slug']}\""
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def add_filestore(payload, headers=default_headers)
+      info("Adding Filestore \"#{payload['name']}\" with slug \"#{payload['slug']}\"")
       post("#{@api_url}/filestores", payload, headers)
     end
 
@@ -20,30 +20,30 @@ module KineticSdk
     #
     # @param slug [String] slug of the filestore
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_filestore(slug, headers=default_headers)
-      puts "Deleting Filestore \"#{slug}\""
+      info("Deleting Filestore \"#{slug}\"")
       delete("#{@api_url}/filestores/#{slug}", headers)
     end
 
-    # List Filestore
+    # Find Filestore
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def find_filestores(params={}, headers=default_headers)
-      puts "Listing Filestores"
+      info("Find Filestores")
       get("#{@api_url}/filestores", params, headers)
     end
 
-    # Retrieve a Filestore
+    # Find a Filestore
     #
     # @param slug [String] slug of the filestore
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_filestore(slug, params={}, headers=default_headers)
-      puts "Retrieving Filestore \"#{slug}\""
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_filestore(slug, params={}, headers=default_headers)
+      info("Finding Filestore \"#{slug}\"")
       get("#{@api_url}/filestores/#{slug}", params, headers)
     end
 
@@ -57,9 +57,9 @@ module KineticSdk
     #   - +properties+
     #   - +slug+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_filestore(slug, payload, headers=default_headers)
-      puts "Updating Filestore \"#{slug}\""
+      info("Updating Filestore \"#{slug}\"")
       put("#{@api_url}/filestores/#{slug}", payload, headers)
     end
 

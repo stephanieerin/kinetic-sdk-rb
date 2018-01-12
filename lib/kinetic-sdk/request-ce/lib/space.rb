@@ -6,16 +6,16 @@ module KineticSdk
     # @param attribute_name [String] name of the attribute
     # @param attribute_value [String] value of the attribute
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def add_space_attribute(attribute_name, attribute_value, headers=default_headers)
-      # first retrieve the space
-      response = retrieve_space({ "include" => "attributes"}, headers)
-      space = JSON.parse(response)["space"]
+      # first find the space
+      response = find_space({ "include" => "attributes"}, headers)
+      space = response.content["space"]
       attributes = space["attributes"]
       # either add or update the attribute value
       exists = false
       attributes.each do |attribute|
-        puts "Attribute: #{attribute.inspect}"
+        info("Attribute: #{attribute.inspect}")
         # if the attribute already exists, update it
         if attribute["name"] == attribute_name
           attribute["values"] = [ attribute_value ]
@@ -31,9 +31,9 @@ module KineticSdk
       # set the updated attributes list
       body = { "attributes" => attributes }
       if exists
-        puts "Updating attribute \"#{attribute_name}\" = \"#{attribute_value}\" in the \"#{space_slug}\" space."
+        info("Updating attribute \"#{attribute_name}\" = \"#{attribute_value}\" in the \"#{space_slug}\" space.")
       else
-        puts "Adding attribute \"#{attribute_name}\" = \"#{attribute_value}\" to the \"#{space_slug}\" space."
+        info("Adding attribute \"#{attribute_name}\" = \"#{attribute_value}\" to the \"#{space_slug}\" space.")
       end
       # Update the space
       put("#{@api_url}/space", body, headers)
@@ -43,38 +43,38 @@ module KineticSdk
     #
     # @param body [Hash] properties for the Space
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_space(body={}, headers=default_headers)
-      puts "Updating Space \"#{@space_slug}\""
+      info("Updating Space \"#{@space_slug}\"")
       put("#{@api_url}/space", body, headers)
     end
 
     # Export a space
     #
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def export_space(headers=default_headers)
-      puts "Exporting Space \"#{@space_slug}\""
+      info("Exporting Space \"#{@space_slug}\"")
       get("#{@api_url}/space", { 'export' => true}, headers)
     end
 
-    # List all spaces
+    # Find all spaces
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def list_spaces(params={}, headers=default_headers)
-      puts "List Spaces"
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_spaces(params={}, headers=default_headers)
+      info("Finding Spaces")
       get("#{@api_url}/spaces", params, headers)
     end
 
-    # Retrieve the space
+    # Find the space
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_space(params={}, headers=default_headers)
-      puts "Retrieving Space \"#{@space_slug}\""
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_space(params={}, headers=default_headers)
+      info("Finding Space \"#{@space_slug}\"")
       get("#{@api_url}/space", params, headers)
     end
 
@@ -83,11 +83,11 @@ module KineticSdk
     # @param slug [String] slug of the space
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def space_exists?(slug, params={}, headers=default_headers)
-      puts "Checking if the \"#{slug}\" space exists"
+      info("Checking if the \"#{slug}\" space exists")
       response = get("#{@api_url}/spaces/#{slug}", params, headers)
-      !response.nil? && response.code == 200
+      response.status == 200
     end
 
   end

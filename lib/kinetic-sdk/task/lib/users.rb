@@ -1,22 +1,22 @@
 module KineticSdk
   class Task
 
-    # Create a user
+    # Add a user
     #
     # @param user [Hash] user properties
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
-    #     create_user({
+    #     add_user({
     #       "loginId" => "foo",
     #       "password" => "bar",
     #       "email" => "foo@bar.com"
     #     })
     #
-    def create_user(user, headers=default_headers)
-      puts "Creating user \"#{user['loginId']}\""
+    def add_user(user, headers=default_headers)
+      info("Add user \"#{user['loginId']}\"")
       post("#{@api_url}/users", user, headers)
     end
 
@@ -24,31 +24,30 @@ module KineticSdk
     #
     # @param login_id [String] login id of the user
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_user(login_id, headers=header_basic_auth)
-      puts "Deleting User \"#{login_id}\""
-      delete("#{@api_url}/users/#{url_encode(login_id)}", headers)
+      info("Deleting User \"#{login_id}\"")
+      delete("#{@api_url}/users/#{encode(login_id)}", headers)
     end
 
     # Delete all Users
     #
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_users(headers=header_basic_auth)
-      puts "Deleting all users"
-      find_users(headers).each do |user_json|
-        user = JSON.parse(user_json)
-        delete("#{@api_url}/users/#{url_encode(user['login_id'])}", headers)
+      info("Deleting all users")
+      find_users(headers).content["users"].each do |user|
+        delete("#{@api_url}/users/#{encode(user['login_id'])}", headers)
       end
     end
 
-    # Retrieve all users
+    # Find all users
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def find_users(params={}, headers=header_basic_auth)
-      puts "Retrieving all users"
+      info("Finding all users")
       get("#{@api_url}/users", params, headers)
     end
 
@@ -57,7 +56,7 @@ module KineticSdk
     # @param login_id [String] Login Id for the user
     # @param user [Hash] updated properties of the user
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -68,8 +67,8 @@ module KineticSdk
     #     })
     #
     def update_user(login_id, user, headers=default_headers)
-      puts "Updating user \"#{login_id}\""
-      put("#{@api_url}/users/#{url_encode(login_id)}", user, headers)
+      info("Updating user \"#{login_id}\"")
+      put("#{@api_url}/users/#{encode(login_id)}", user, headers)
     end
 
   end

@@ -6,10 +6,10 @@ module KineticSdk
   # without having to make explicit HTTP requests.
   class Bridgehub
 
-    # Include the KineticSdk Http module
-    include KineticSdk::Http
+    # Include the KineticHttpUtils module
+    include KineticSdk::Utils::KineticHttpUtils
 
-    attr_reader :api_url, :login, :options, :password, :server, :version
+    attr_reader :api_url, :username, :options, :password, :server, :version
 
     # Initalize the BridgeHub SDK with the web server URL and configuration user
     # credentials, along with any custom option values.
@@ -19,10 +19,11 @@ module KineticSdk
     #     - Ex: /opt/config/bridgehub-configuration1.yaml
     #   - +app_server_url+ - the URL to the Kinetic BridgeHub web application.
     #     - Ex: http://192.168.0.1:8080/kinetic-bridgehub
-    #   - +login+ - the login id for the user
+    #   - +username+ - the username for the user
     #   - +password+ - the password for the user
     #   - +options+ - optional settings
-    #     - +log_level+ - info | debug (default: info)
+    #     - +log_level+ - off | info | debug | trace (default: off)
+    #     - +max_redirects+ - Fixnum (default: 10)
     #
     # Example: configuration file
     #
@@ -34,7 +35,7 @@ module KineticSdk
     #
     #     KineticSdk::Bridgehub.new({
     #       app_server_url: "http://localhost:8080/kinetic-bridgehub",
-    #       login: "admin",
+    #       username: "admin",
     #       password: "admin",
     #       options: {
     #         log_level: "debug"
@@ -55,7 +56,7 @@ module KineticSdk
 
       # process any individual options
       @options.merge!(opts[:options]) if opts[:options].is_a? Hash
-      @login = opts[:login]
+      @username = opts[:username]
       @password = opts[:password]
       @server = opts[:app_server_url]
       @api_url = "#{@server}/app/manage-api/v1"

@@ -6,8 +6,8 @@ module KineticSdk
   # without having to make explicit HTTP requests.
   class Task
 
-    # Include the Kinetic Http module
-    include KineticSdk::Http
+    # Include the KineticHttpUtils module
+    include KineticSdk::Utils::KineticHttpUtils
 
     attr_reader :api_url, :api_v1_url, :config_user, :options, :server, :version
 
@@ -19,11 +19,11 @@ module KineticSdk
     #     - Ex: /opt/config/task-configuration1.yaml
     #   - +app_server_url+ - the URL to the Kinetic Task web application.
     #     - Ex: http://192.168.0.1:8080/kinetic-task
-    #   - +login+ - the login id for the user
+    #   - +username+ - the username for the user
     #   - +password+ - the password for the user
     #   - +options+ - optional settings
-    #     - +log_level+ - info | debug (default: info)
-    #     - +export_directory+ - existing path for exported files
+    #     - +log_level+ - off | info | debug | trace (default: off)
+    #     - +max_redirects+ - Fixnum (default: 10)
     #
     # Example: configuration file
     #
@@ -35,7 +35,7 @@ module KineticSdk
     #
     #     KineticSdk::Task.new({
     #       app_server_url: "http://localhost:8080/kinetic-task",
-    #       login: "admin",
+    #       username: "admin",
     #       password: "admin",
     #       options: {
     #         log_level: "debug",
@@ -59,7 +59,7 @@ module KineticSdk
 
       # process any individual options
       @options.merge!(opts[:options]) if opts[:options].is_a? Hash
-      @config_user[:username] = opts[:login]
+      @config_user[:username] = opts[:username]
       @config_user[:password] = opts[:password]
       @server = opts[:app_server_url]
 

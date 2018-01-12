@@ -1,7 +1,7 @@
 module KineticSdk
   class Task
 
-    # Create a source
+    # Add a source
     #
     # @param source [Hash] Source properties
     #   - +name+ - name of the source
@@ -10,11 +10,11 @@ module KineticSdk
     #   - +properties+ - hash of properties specific to the source consumer
     #   - +policyRules+ - array of policy rules to associate with the source
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
-    #     create_source({
+    #     add_source({
     #       "name" => "Source Name",
     #       "status" => "Active",
     #       "type" => "Kinetic Request CE",
@@ -27,9 +27,9 @@ module KineticSdk
     #       "policyRules" => []
     #     })
     #
-    def create_source(source, headers=default_headers)
+    def add_source(source, headers=default_headers)
       name = source['name']
-      puts "Adding the #{name} source"
+      info("Adding the #{name} source")
       post("#{@api_url}/sources", source, headers)
     end
 
@@ -37,43 +37,42 @@ module KineticSdk
     #
     # @param name [String] name of the source
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_source(name, headers=header_basic_auth)
-      puts "Deleting Source \"#{name}\""
-      delete("#{@api_url}/sources/#{url_encode(name)}", headers)
+      info("Deleting Source \"#{name}\"")
+      delete("#{@api_url}/sources/#{encode(name)}", headers)
     end
 
     # Delete all Sources
     #
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_sources(headers=header_basic_auth)
-      puts "Deleting all sources"
-      find_sources(headers).each do |source_json|
-        source = JSON.parse(source_json)
-        delete("#{@api_url}/sources/#{url_encode(source['name'])}", headers)
+      info("Deleting all sources")
+      find_sources(headers).content['sources'].each do |source|
+        delete("#{@api_url}/sources/#{encode(source['name'])}", headers)
       end
     end
 
-    # Retrieve all sources
+    # Find all sources
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def find_sources(params={}, headers=header_basic_auth)
-      puts "Retrieving all sources"
+      info("Finding all sources")
       get("#{@api_url}/sources", params, headers)
     end
 
-    # Retrieve a source
+    # Find a source
     #
     # @param name [String] name of the source
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_source(name, params={}, headers=header_basic_auth)
-      puts "Retrieving source named \"#{name}\""
-      get("#{@api_url}/sources/#{url_encode(name)}", params, headers)
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_source(name, params={}, headers=header_basic_auth)
+      info("Finding source named \"#{name}\"")
+      get("#{@api_url}/sources/#{encode(name)}", params, headers)
     end
 
     # Update a source
@@ -82,7 +81,7 @@ module KineticSdk
     #   - +name+ - name of the source
     # @param body [Hash] - source properties to update
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Exammple
     #
@@ -102,8 +101,8 @@ module KineticSdk
     #     )
     #
     def update_source(source, body={}, headers=default_headers)
-      puts "Updating the \"#{source['name']}\" Source"
-      put("#{@api_url}/sources/#{url_encode(source['name'])}", body, headers)
+      info("Updating the \"#{source['name']}\" Source")
+      put("#{@api_url}/sources/#{encode(source['name'])}", body, headers)
     end
 
     # Add policy rule to source
@@ -112,11 +111,11 @@ module KineticSdk
     # @param policy_rule_name [String] the name of the policy rule
     # @param source_name [String] name of the source to add the policy rule to
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def add_policy_rule_to_source(policy_rule_type, policy_rule_name, source_name, headers=default_headers)
       body = { "type" => policy_rule_type, "name" => policy_rule_name }
-      puts "Adding policy rule \"#{policy_rule_type} - #{policy_rule_name}\" to source \"#{source_name}\""
-      post("#{@api_url}/sources/#{url_encode(source_name)}/policyRules", body, headers)
+      info("Adding policy rule \"#{policy_rule_type} - #{policy_rule_name}\" to source \"#{source_name}\"")
+      post("#{@api_url}/sources/#{encode(source_name)}/policyRules", body, headers)
     end
 
     # Remove policy rule from source
@@ -125,10 +124,10 @@ module KineticSdk
     # @param policy_rule_name [String] the name of the policy rule
     # @param source_name [String] name of the source to add the policy rule to
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def remove_policy_rule_from_source(policy_rule_type, policy_rule_name, source_name, headers=default_headers)
-      puts "Removing policy rule \"#{policy_rule_type} - #{policy_rule_name}\" from source \"#{source_name}\""
-      delete("#{@api_url}/sources/#{url_encode(source_name)}/policyRules/#{url_encode(policy_rule_type)}/#{url_encode(policy_rule_name)}", headers)
+      info("Removing policy rule \"#{policy_rule_type} - #{policy_rule_name}\" from source \"#{source_name}\"")
+      delete("#{@api_url}/sources/#{encode(source_name)}/policyRules/#{encode(policy_rule_type)}/#{encode(policy_rule_name)}", headers)
     end
 
   end

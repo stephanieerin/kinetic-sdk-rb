@@ -2,10 +2,9 @@ require 'yard'
 
 desc "Generate Documentation"
 YARD::Rake::YardocTask.new do |t|
-  t.files   = ['lib/**/*.rb', '-', 'REQUIREMENTS.md']
-  t.options = ['--title=Kinetic SDK', '--readme=README.md']
-  t.stats_options = ['--list-undoc']
+  # see .yardopts
 end
 
-# Generate the Yard documentation
-task :default => [:yard]
+# Generate Yard documentation
+task :doc => [:yard]
+task :default => [:doc]

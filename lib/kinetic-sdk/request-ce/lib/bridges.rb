@@ -1,20 +1,20 @@
 module KineticSdk
   class RequestCe
 
-    # Create a Bridge
+    # Add a Bridge
     #
     # @param body [Hash] optional properties associated to the Bridge
     #   - +name+
     #   - +status+
     #   - +url+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def create_bridge(body={}, headers=default_headers)
-      puts "Creating the \"#{body['name']}\" Bridge."
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def add_bridge(body={}, headers=default_headers)
+      info("Adding the \"#{body['name']}\" Bridge.")
       post("#{@api_url}/bridges", body, headers)
     end
 
-    # Create a Bridge Model
+    # Add a Bridge Model
     #
     # @param body [Hash] optional properties associated to the Bridge Model
     #   - +name+
@@ -24,31 +24,31 @@ module KineticSdk
     #   - +mappings+
     #   - +qualifications+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def create_bridge_model(body={}, headers=default_headers)
-      puts "Creating the \"#{body['name']}\" Bridge Model and Mappings."
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def add_bridge_model(body={}, headers=default_headers)
+      info("Adding the \"#{body['name']}\" Bridge Model and Mappings.")
       post("#{@api_url}/models", body, headers)
     end
 
-    # Retrieve a list of bridges
+    # Find a list of bridges
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def list_bridges(params={}, headers=default_headers)
-      puts "List Bridges."
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_bridges(params={}, headers=default_headers)
+      info("Find Bridges.")
       get("#{@api_url}/bridges", params, headers)
     end
 
-    # Retrieve a bridge
+    # Find a bridge
     #
     # @param name [String] name of the bridge
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_bridge(name, params={}, headers=default_headers)
-      puts "Retrieving the \"#{name}\" Bridge."
-      get("#{@api_url}/bridges/#{url_encode{name}}", params, headers)
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_bridge(name, params={}, headers=default_headers)
+      info("Finding the \"#{name}\" Bridge.")
+      get("#{@api_url}/bridges/#{encode{name}}", params, headers)
     end
 
     # Update a bridge
@@ -56,10 +56,10 @@ module KineticSdk
     # @param name [String] name of the bridge
     # @param body [Hash] properties of the bridge to update
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_bridge(name, body={}, headers=default_headers)
-      puts "Updating the \"#{name}\" Bridge."
-      put("#{@api_url}/bridges/#{url_encode(name)}", body, headers)
+      info("Updating the \"#{name}\" Bridge.")
+      put("#{@api_url}/bridges/#{encode(name)}", body, headers)
     end
 
   end

@@ -1,0 +1,7 @@
+--title Kinetic SDK
+--charset utf-8
+--markup markdown
+--output-dir rdoc
+--readme README.md
+--load docs/yard-resolve-links.rb
+'lib/**/*.rb' - 'docs/*.md'

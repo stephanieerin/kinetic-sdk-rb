@@ -1,15 +1,15 @@
 module KineticSdk
   class Task
 
-    # Create an access key
+    # Add an access key
     #
     # @param access_key [Hash] properties for the access key
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
-    #     create_access_key({
+    #     add_access_key({
     #       "description" => "Description",
     #       "identifier" => "X54DLNU",
     #       "secret" => "xyz"
@@ -17,16 +17,16 @@ module KineticSdk
     #
     # Example
     #
-    #     create_access_key({
+    #     add_access_key({
     #       "description" => "Description"
     #     })
     #
     # Example
     #
-    #     create_access_key()
+    #     add_access_key()
     #
-    def create_access_key(access_key={}, headers=default_headers)
-      puts "Adding access key " + (access_key.has_key?('identifier') ? access_key['identifier'] : "")
+    def add_access_key(access_key={}, headers=default_headers)
+      info("Adding access key " + (access_key.has_key?('identifier') ? access_key['identifier'] : ""))
       post("#{@api_url}/access-keys", access_key, headers)
     end
 
@@ -34,42 +34,42 @@ module KineticSdk
     #
     # @param identifier [String] access key identifier
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def delete_source(identifier, headers=header_basic_auth)
-      puts "Deleting access key \"#{identifier}\""
-      delete("#{@api_url}/access-keys/#{url_encode(identifier)}", headers)
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def delete_access_key(identifier, headers=header_basic_auth)
+      info("Deleting access key \"#{identifier}\"")
+      delete("#{@api_url}/access-keys/#{encode(identifier)}", headers)
     end
 
     # Delete all access keys
     #
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_access_keys(headers=header_basic_auth)
-      puts "Deleting all access keys"
+      info("Deleting all access keys")
       JSON.parse(find_access_keys(headers))["accessKeys"].each do |access_key|
-        delete("#{@api_url}/access_keys/#{url_encode(access_key['identifier'])}", headers)
+        delete("#{@api_url}/access_keys/#{encode(access_key['identifier'])}", headers)
       end
     end
 
-    # Retrieve all access keys
+    # Find all access keys
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def find_access_keys(params={}, headers=header_basic_auth)
-      puts "Retrieving all access keys"
+      info("Finding all access keys")
       get("#{@api_url}/access-keys", params, headers)
     end
 
-    # Retrieve an access key
+    # Find an access key
     #
     # @param identifier [String] access key identifier
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_access_key(identifier, params={}, headers=default_headers)
-      puts "Retrieving access key \"#{identifier}\""
-      get("#{@api_url}/access-keys/#{url_encode(identifier)}", params, headers)
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_access_key(identifier, params={}, headers=default_headers)
+      info("Finding access key \"#{identifier}\"")
+      get("#{@api_url}/access-keys/#{encode(identifier)}", params, headers)
     end
 
     # Update an access key
@@ -77,7 +77,7 @@ module KineticSdk
     # @param identifier [String] access key identifier
     # @param body [Hash] properties to update, all optional
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Exammple
     #
@@ -86,8 +86,8 @@ module KineticSdk
     #     })
     #
     def update_access_key(identifier, body={}, headers=default_headers)
-      puts "Updating the \"#{identifier}\" access key"
-      put("#{@api_url}/access-keys/#{url_encode(identifier)}", body, headers)
+      info("Updating the \"#{identifier}\" access key")
+      put("#{@api_url}/access-keys/#{encode(identifier)}", body, headers)
     end
 
   end

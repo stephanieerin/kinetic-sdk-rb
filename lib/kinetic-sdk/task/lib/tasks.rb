@@ -7,10 +7,10 @@ module KineticSdk
     # @param body [Hash] properties that are sent to update the task
     #   - +token+ - the token linked to the deferred task
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def complete_deferred_task(source_name, body, headers=default_headers)
-      puts "Completing deferred task for the \"#{source_name}\" Source."
-      post("#{@api_v1_url}/complete-deferred-task/#{url_encode(source_name)}", body, headers)
+      info("Completing deferred task for the \"#{source_name}\" Source.")
+      post("#{@api_v1_url}/complete-deferred-task/#{encode(source_name)}", body, headers)
     end
 
   end

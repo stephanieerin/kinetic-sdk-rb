@@ -4,19 +4,19 @@ module KineticSdk
     # Delete the license
     #
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_license(headers=header_basic_auth)
-      puts "Deleting the license"
+      info("Deleting the license")
       delete("#{@api_url}/config/license", {}, headers)
     end
 
-    # Retrieve the license
+    # Find the license
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_license(params={}, headers=header_basic_auth)
-      puts "Retrieving the license"
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_license(params={}, headers=header_basic_auth)
+      info("Finding the license")
       get("#{@api_url}/config/license", params, headers)
     end
 
@@ -24,10 +24,10 @@ module KineticSdk
     #
     # @param license_content [String] the content of the license file
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_license(license_content, headers=default_headers)
       body = { "licenseContent" => license_content }
-      puts "Updating license"
+      info("Updating license")
       post("#{@api_url}/config/license", body, headers)
     end
 
@@ -35,7 +35,7 @@ module KineticSdk
     #
     # @param license [String|File] Either the license file path (String), or the license file (File)
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def import_license(license, headers=default_headers)
       if license.is_a? File
         update_license(license.read, headers)
@@ -43,7 +43,7 @@ module KineticSdk
         if File.exists? license
           update_license(File.read(license), headers)
         else
-          puts "  * License file \"#{license}\" does not exist."
+          info("  * License file \"#{license}\" does not exist.")
         end
       end
     end

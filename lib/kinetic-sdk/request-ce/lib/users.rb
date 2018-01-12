@@ -1,7 +1,7 @@
 module KineticSdk
   class RequestCe
 
-    # Create a user in a space.
+    # Add a user in a space.
     #
     # If the SDK was initialized as a System user, the space_slug property
     # must be provided in the user hash.
@@ -11,11 +11,11 @@ module KineticSdk
     #
     # @param user [Hash] hash of user properties
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
-    #     create_user({
+    #     add_user({
     #       "space_slug" => "bar",
     #       "username" => "foo",
     #       "password" => "bar",
@@ -26,16 +26,16 @@ module KineticSdk
     #       "spaceAdmin" => false
     #     })
     #
-    def create_user(user, headers=default_headers)
+    def add_user(user, headers=default_headers)
       if !@space_slug.nil?
-        puts "Creating user \"#{user['username']}\" for Space \"#{@space_slug}\" as system user."
+        info("Adding user \"#{user['username']}\" for Space \"#{@space_slug}\" as system user.")
         post("#{@api_url}/users", user, headers)
       elsif !user['space_slug'].nil?
         space_slug = user.delete('space_slug')
-        puts "Creating user \"#{user['username']}\" for Space \"#{space_slug}\"."
+        info("Adding user \"#{user['username']}\" for Space \"#{space_slug}\".")
         post("#{@api_url}/spaces/#{space_slug}/users", user, headers)
       else
-        raise StandardError.new "The space slug must be supplied to create the user."
+        raise StandardError.new "The space slug must be supplied to add the user."
       end
     end
 
@@ -51,7 +51,7 @@ module KineticSdk
     #   - +space_slug+ - only used when initialized as a System user
     #   - +username+ - username of the user
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -68,14 +68,14 @@ module KineticSdk
     #
     def delete_user(user, headers=default_headers)
       if !@space_slug.nil?
-        puts "Deleting user \"#{user['username']}\" for Space \"#{@space_slug}\" as system user."
-        delete("#{@api_url}/users/#{url_encode(user['username'])}", headers)
+        info("Deleting user \"#{user['username']}\" for Space \"#{@space_slug}\" as system user.")
+        delete("#{@api_url}/users/#{encode(user['username'])}", headers)
       elsif !user['space_slug'].nil?
         space_slug = user.delete('space_slug')
-        puts "Deleting user \"#{user['username']}\" for Space \"#{space_slug}\"."
-        delete("#{@api_url}/spaces/#{space_slug}/users/#{url_encode(user['username'])}", headers)
+        info("Deleting user \"#{user['username']}\" for Space \"#{space_slug}\".")
+        delete("#{@api_url}/spaces/#{space_slug}/users/#{encode(user['username'])}", headers)
       else
-        raise StandardError.new "The space slug must be supplied to create the user."
+        raise StandardError.new "The space slug must be supplied to add the user."
       end
     end
 
@@ -85,11 +85,11 @@ module KineticSdk
     # @param attribute_name [String] name of the attribute
     # @param attribute_value [String] value of the attribute
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def add_user_attribute(username, attribute_name, attribute_value, headers=default_headers)
-      # first retrieve the user
-      response = retrieve_user(username, { "include" => "attributes"}, headers)
-      user = JSON.parse(response)["user"]
+      # first find the user
+      response = find_user(username, { "include" => "attributes"}, headers)
+      user = response.content["user"]
       attributes = user["attributes"]
       # either add or update the attribute value
       exists = false
@@ -109,12 +109,12 @@ module KineticSdk
       # set the updated attributes list
       body = { "attributes" => attributes }
       if exists
-        puts "Updating attribute \"#{attribute_name}\" on user \"#{username}\"."
+        info("Updating attribute \"#{attribute_name}\" on user \"#{username}\".")
       else
-        puts "Adding attribute \"#{attribute_name}\" to user \"#{username}\"."
+        info("Adding attribute \"#{attribute_name}\" to user \"#{username}\".")
       end
       # Update the user
-      put("#{@api_url}/users/#{url_encode(username)}", body, headers)
+      put("#{@api_url}/users/#{encode(username)}", body, headers)
     end
 
     # Adds an attribute value to an attribute.
@@ -123,11 +123,11 @@ module KineticSdk
     # @param attribute_name [String] name of the attribute
     # @param attribute_value [String] value of the attribute
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def add_user_attribute_value(username, attribute_name, attribute_value, headers=default_headers)
-      # first retrieve the user
-      response = retrieve_user(username, { "include" => "attributes"}, headers)
-      user = JSON.parse(response)["user"]
+      # first find the user
+      response = find_user(username, { "include" => "attributes"}, headers)
+      user = response.content["user"]
       attributes = user["attributes"]
       # either add or update the attribute value
       exists = false
@@ -152,23 +152,23 @@ module KineticSdk
       # set the updated attributes list
       body = { "attributes" => attributes }
       if exists
-        puts "Updating attribute \"#{attribute_name}\" on user \"#{username}\"."
+        info("Updating attribute \"#{attribute_name}\" on user \"#{username}\".")
       else
-        puts "Adding attribute \"#{attribute_name}\" to user \"#{username}\"."
+        info("Adding attribute \"#{attribute_name}\" to user \"#{username}\".")
       end
       # Update the user
-      put("#{@api_url}/users/#{url_encode(username)}", body, headers)
+      put("#{@api_url}/users/#{encode(username)}", body, headers)
     end
 
-    # Retrieve the user
+    # Find the user
     #
     # @param username [String] username of the user
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_user(username, params={}, headers=default_headers)
-      puts "Retrieving User \"#{username}\""
-      get("#{@api_url}/users/#{url_encode(username)}", params, headers)
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_user(username, params={}, headers=default_headers)
+      info("Finding User \"#{username}\"")
+      get("#{@api_url}/users/#{encode(username)}", params, headers)
     end
 
     # Update a user in a space.
@@ -182,7 +182,7 @@ module KineticSdk
     # @param username [String] username of the user to update
     # @param user [Hash] user properties to update
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -199,12 +199,12 @@ module KineticSdk
     #
     def update_user(username, user, headers=default_headers)
       if !@space_slug.nil?
-        puts "Updating user \"#{username}\" for Space \"#{@space_slug}\" as system user."
-        put("#{@api_url}/users/#{url_encode(username)}", user, headers)
+        info("Updating user \"#{username}\" for Space \"#{@space_slug}\" as system user.")
+        put("#{@api_url}/users/#{encode(username)}", user, headers)
       elsif !user['space_slug'].nil?
         space_slug = user.delete('space_slug')
-        puts "Updating user \"#{username}\" for Space \"#{space_slug}\"."
-        put("#{@api_url}/spaces/#{space_slug}/users/#{url_encode(username)}", user, headers)
+        info("Updating user \"#{username}\" for Space \"#{space_slug}\".")
+        put("#{@api_url}/spaces/#{space_slug}/users/#{encode(username)}", user, headers)
       else
         raise StandardError.new "The space slug must be supplied to update the user."
       end
@@ -215,19 +215,19 @@ module KineticSdk
     # @param username [String] username of the user
     # @param body [Hash] properties
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def generate_password_token(username, body={}, headers=default_headers)
-      puts "Generating PW Token for \"#{username}\""
-      post("#{@api_url}/users/#{url_encode(username)}/passwordResetToken", body, headers)
+      info("Generating PW Token for \"#{username}\"")
+      post("#{@api_url}/users/#{encode(username)}/passwordResetToken", body, headers)
     end
 
-    # Retrieve the current user
+    # Find the current user
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def me(params={}, headers=default_headers)
-      puts "Retrieving Me"
+      info("Finding Me")
       get("#{@api_url}/me", params, headers)
     end
 

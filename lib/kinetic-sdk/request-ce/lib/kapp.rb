@@ -1,7 +1,7 @@
 module KineticSdk
   class RequestCe
 
-    # Create a Kapp
+    # Add a Kapp
     #
     # @param kapp_name [String] name of the Kapp
     # @param kapp_slug [String] slug of the Kapp
@@ -16,13 +16,13 @@ module KineticSdk
     #   - +loginPage+
     #   - +resetPasswordPage+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def create_kapp(kapp_name, kapp_slug, properties={}, headers=default_headers)
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def add_kapp(kapp_name, kapp_slug, properties={}, headers=default_headers)
       properties.merge!({
         "name" => kapp_name,
         "slug" => kapp_slug
       })
-      puts "Creating the \"#{kapp_name}\" Kapp."
+      info("Adding the \"#{kapp_name}\" Kapp.")
       post("#{@api_url}/kapps", properties, headers)
     end
 
@@ -30,9 +30,9 @@ module KineticSdk
     #
     # @param kapp_slug [String] slug of the Kapp
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_kapp(kapp_slug, headers=default_headers)
-      puts "Deleting the \"#{kapp_slug}\" Kapp."
+      info("Deleting the \"#{kapp_slug}\" Kapp.")
       delete("#{@api_url}/kapps/#{kapp_slug}", headers)
     end
 
@@ -40,30 +40,30 @@ module KineticSdk
     #
     # @param kapp_slug [String] slug of the Kapp
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def export_kapp(kapp_slug, headers=default_headers)
-      puts "Exporting the \"#{kapp_slug}\" Kapp."
+      info("Exporting the \"#{kapp_slug}\" Kapp.")
       get("#{@api_url}/kapps/#{kapp_slug}", { 'export' => true }, headers)
     end
 
-    # List Kapps
+    # Find Kapps
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def list_kapps(params={}, headers=default_headers)
-      puts "Listing Kapps."
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_kapps(params={}, headers=default_headers)
+      info("Finding Kapps.")
       get("#{@api_url}/kapps", params, headers)
     end
 
-    # Retrieve a Kapp
+    # Find a Kapp
     #
     # @param kapp_slug [String] slug of the Kapp
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_kapp(kapp_slug, params={}, headers=default_headers)
-      puts "Retrieving Kapp \"#{kapp_slug}\""
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_kapp(kapp_slug, params={}, headers=default_headers)
+      info("Finding Kapp \"#{kapp_slug}\"")
       get("#{@api_url}/kapps/#{kapp_slug}", params, headers)
     end
 
@@ -83,9 +83,9 @@ module KineticSdk
     #   - +resetPasswordPage+
     #   - +slug+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_kapp(kapp_slug, properties={}, headers=default_headers)
-      puts "Updating the \"#{kapp_slug}\" Kapp."
+      info("Updating the \"#{kapp_slug}\" Kapp.")
       put("#{@api_url}/kapps/#{kapp_slug}", properties, headers)
     end
 

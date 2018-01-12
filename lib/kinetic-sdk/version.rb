@@ -4,7 +4,7 @@ module KineticSdk
   #
   # @return [String] Version of the SDK
   def self.version
-    "1.0.0"
+    "0.0.1"
   end
 
 end

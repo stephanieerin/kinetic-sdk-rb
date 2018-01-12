@@ -1,27 +1,25 @@
 module KineticSdk
   class Task
 
-    # Retrieve the database configuration
+    # Find the database configuration
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_db(params={}, headers=header_basic_auth)
-      puts "Retrieving database configuration"
-      response = get("#{@api_url}/config/db", params, headers)
-      response.body
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_db(params={}, headers=header_basic_auth)
+      info("Finding the database configuration")
+      get("#{@api_url}/config/db", params, headers)
     end
 
 
-    # Retrieve the session configuration properties
+    # Find the session configuration properties
     #
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
-    def retrieve_session_configuration(params={}, headers=header_basic_auth)
-      puts "Retrieving session timeout"
-      response = get("#{@api_url}/config/session", params, headers)
-      response.body
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_session_configuration(params={}, headers=header_basic_auth)
+      info("Finding the session timeout")
+      get("#{@api_url}/config/session", params, headers)
     end
 
 
@@ -29,7 +27,7 @@ module KineticSdk
     #
     # @param settings [Hash] Settings for the authenticator
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -44,7 +42,7 @@ module KineticSdk
     #     })
     #
     def update_authentication(settings, headers=default_headers)
-      puts "Updating the authentication properties"
+      info("Updating the authentication properties")
       put("#{@api_url}/config/auth", settings, headers)
     end
 
@@ -55,7 +53,7 @@ module KineticSdk
     #
     # @param settings [Hash] Setting sfor the selected type of dbms
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -68,7 +66,7 @@ module KineticSdk
     #     })
     #
     def update_db(settings, headers=default_headers)
-      puts "Updating the database properties"
+      info("Updating the database properties")
       put("#{@api_url}/config/db", settings, headers)
     end
 
@@ -77,7 +75,7 @@ module KineticSdk
     #
     # @param settings [Hash] Settings for the selected type of dbms
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -88,12 +86,12 @@ module KineticSdk
     #     })
     #
     def update_engine(settings, headers=default_headers)
-      puts "Updating the engine properties"
+      info("Updating the engine properties")
       put("#{@api_url}/config/engine", settings, headers)
 
       # start the task engine?
       if !settings['Sleep Delay'].nil? && settings['Sleep Delay'].to_i > 0
-        puts "Starting the engine"
+        info("Starting the engine")
         start_engine
       end
     end
@@ -103,7 +101,7 @@ module KineticSdk
     #
     # @param settings [Hash] Settings for the identity store
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -118,7 +116,7 @@ module KineticSdk
     #     })
     #
     def update_identity_store(settings, headers=default_headers)
-      puts "Updating the identity store properties"
+      info("Updating the identity store properties")
       put("#{@api_url}/config/identityStore", settings, headers)
     end
 
@@ -127,7 +125,7 @@ module KineticSdk
     #
     # @param settings [Hash] Settings for the web server and configurator user
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -146,7 +144,7 @@ module KineticSdk
     #     })
     #
     def update_properties(settings, headers=default_headers)
-      puts "Updating the web server properties"
+      info("Updating the web server properties")
       put("#{@api_url}/config/server", settings, headers)
 
       # reset the configuration user
@@ -161,7 +159,7 @@ module KineticSdk
     #
     # @param settings [Hash] Settings for the session configuration
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
-    # @return [RestClient::Response] Response object, with +code+ and +body+ properties
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     #
     # Example
     #
@@ -170,7 +168,7 @@ module KineticSdk
     #     })
     #
     def update_session_configuration(settings, headers=default_headers)
-      puts "Updating the session configuration settings"
+      info("Updating the session configuration settings")
       put("#{@api_url}/config/session", settings, headers)
     end
 

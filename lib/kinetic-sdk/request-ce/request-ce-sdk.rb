@@ -6,13 +6,13 @@ module KineticSdk
   # without having to make explicit HTTP requests.
   class RequestCe
 
-    # Include the Kinetic Http module
-    include KineticSdk::Http
+    # Include the KineticHttpUtils module
+    include KineticSdk::Utils::KineticHttpUtils
 
-    attr_reader :api_url, :login, :options, :password, :space_slug, :server, :version
+    attr_reader :api_url, :username, :options, :password, :space_slug, :server, :version
 
     # Initalize the Request CE SDK with the web server URL, the space user
-    # login id and password, along with any custom option values.
+    # username and password, along with any custom option values.
     #
     # @param opts [Hash] Kinetic Request CE properties
     #   - +config_file+ - path to the YAML configuration file
@@ -20,10 +20,11 @@ module KineticSdk
     #   - +app_server_url+ - the URL to the Kinetic Request CE web application.
     #     - Ex: http://192.168.0.1:8080/kinetic
     #   - +space_slug+ - optional - the space slug if logging into a Space, otherwise nil to log into the system.
-    #   - +login+ - the login id for the user
+    #   - +username+ - the username for the user
     #   - +password+ - the password for the user
     #   - +options+ - optional settings
-    #     - +log_level+ - info | debug (default: info)
+    #     - +log_level+ - off | info | debug | trace (default: off)
+    #     - +max_redirects+ - Fixnum (default: 10)
     #
     # Example: configuration file
     #
@@ -36,7 +37,7 @@ module KineticSdk
     #     KineticSdk::RequestCe.new({
     #       app_server_url: "http://localhost:8080/kinetic",
     #       space_slug: "foo",
-    #       login: "space-user-1",
+    #       username: "space-user-1",
     #       password: "password",
     #       options: {
     #           log_level: "debug"
@@ -47,7 +48,7 @@ module KineticSdk
     #
     #     KineticSdk::RequestCe.new({
     #       app_server_url: "http://localhost:8080/kinetic",
-    #       login: "admin",
+    #       username: "admin",
     #       password: "password",
     #       options: {
     #           log_level: "debug"
@@ -65,7 +66,7 @@ module KineticSdk
 
       # process any individual options
       @options.merge!(opts[:options]) if opts[:options].is_a? Hash
-      @login = opts[:login]
+      @username = opts[:username]
       @password = opts[:password]
       @space_slug = opts[:space_slug]
       @server = opts[:app_server_url]
