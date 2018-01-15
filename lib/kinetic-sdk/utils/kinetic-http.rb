@@ -328,9 +328,6 @@ module KineticSdk
         mime_type
       end
 
-
-      private
-
       # The maximum number of times to follow redirects.
       #
       # Can be passed in as an option when initializing the SDK
