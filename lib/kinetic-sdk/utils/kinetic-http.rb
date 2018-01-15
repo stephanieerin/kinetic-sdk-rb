@@ -24,7 +24,7 @@ module KineticSdk
       # 
       # @param url [String] url to send the request to
       # @param headers [Hash] hash of headers to send
-      # @param redirect_limit [Fixnum] max number of times to redirect (default 10)
+      # @param redirect_limit [Fixnum] max number of times to redirect
       # @return [Net::HTTPResponse] response
       def delete(url, headers={}, redirect_limit=max_redirects)
         # parse the URL
@@ -60,7 +60,7 @@ module KineticSdk
       # @param url [String] url to send the request to
       # @param params [Hash] Query parameters that are added to the URL, such as +include+
       # @param headers [Hash] hash of headers to send
-      # @param redirect_limit [Fixnum] max number of times to redirect (default 10)
+      # @param redirect_limit [Fixnum] max number of times to redirect
       # @return [Net::HTTPResponse] response
       def get(url, params={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
@@ -98,7 +98,7 @@ module KineticSdk
       # @param url [String] url to send the request to
       # @param data [Hash] the payload to send with the request
       # @param headers [Hash] hash of headers to send
-      # @param redirect_limit [Fixnum] max number of times to redirect (default 10)
+      # @param redirect_limit [Fixnum] max number of times to redirect
       # @return [Net::HTTPResponse] response
       def patch(url, data={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
@@ -137,7 +137,7 @@ module KineticSdk
       # @param url [String] url to send the request to
       # @param data [Hash] the payload to send with the request
       # @param headers [Hash] hash of headers to send
-      # @param redirect_limit [Fixnum] max number of times to redirect (default 10)
+      # @param redirect_limit [Fixnum] max number of times to redirect
       # @return [Net::HTTPResponse] response
       def post(url, data={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
@@ -176,7 +176,7 @@ module KineticSdk
       # @param url [String] url to send the request to
       # @param data [Hash] payload to send with the request
       # @param headers [Hash] hash of headers to send
-      # @param redirect_limit [Fixnum] max number of times to redirect (default 10)
+      # @param redirect_limit [Fixnum] max number of times to redirect
       # @return [Net::HTTPResponse] response
       def post_multipart(url, data={}, headers={}, redirect_limit=max_redirects)
         # the Content-Type header is handled automoatically by Net::HTTP::Post::Multipart
@@ -220,7 +220,7 @@ module KineticSdk
       # @param url [String] url to send the request to
       # @param data [Hash] payload to send with the request
       # @param headers [Hash] hash of headers to send
-      # @param redirect_limit [Fixnum] max number of times to redirect (default 10)
+      # @param redirect_limit [Fixnum] max number of times to redirect
       # @return [Net::HTTPResponse] response
       def put(url, data={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
@@ -340,7 +340,7 @@ module KineticSdk
       # Expects an integer [Fixnum] value. Setting to 0 will disable redirects.
       #
       # @return [Fixnum] default 5
-      def max_redirects #:nodoc: internal use only
+      def max_redirects
         limit = @options &&
         (
           @options[:max_redirects] ||
