@@ -3,10 +3,8 @@
 #   - vendor/kinetic-sdk-rb
 ##
 
-# Find the current directory of this driver file
-pwd = File.dirname(File.expand_path(__FILE__))
 # Require the Kinetic SDK from the vendor directory
-require File.join(pwd, 'vendor', 'kinetic-sdk-rb', 'kinetic-sdk')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'vendor', 'kinetic-sdk-rb', 'kinetic-sdk')
 
 # Instantiate the Kinetic Request CE SDK with a user in the space
 request_ce_sdk = KineticSdk::RequestCe.new({
@@ -15,7 +13,7 @@ request_ce_sdk = KineticSdk::RequestCe.new({
   username: "user1@mycompany.com",
   password: "changeme",
   options: {
-      log_level: "info", # off | info | debug | trace
+      log_level: "debug", # off | info | debug | trace
       max_redirects: 3
   }
 })

@@ -24,24 +24,24 @@ module KineticSdk
       delete("#{@api_url}/spaces/#{slug}", headers)
     end
 
-    # Find the space as the admin user
+    # Find the space (System API)
     #
     # @param slug [String] slug of the space
     # @param params [Hash] Query parameters that are added to the URL, such as +include+
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
-    def find_space_as_admin(slug, params={}, headers=default_headers)
+    def find_space_in_system(slug, params={}, headers=default_headers)
       info("Retrieving Space \"#{slug}\"")
       get("#{@api_url}/spaces/#{slug}", params, headers)
     end
 
-    # Update the space from the admin user
+    # Update the space (System API)
     #
     # @param slug [String] slug of the space
     # @param body [Hash] updated properties of the space
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
-    def update_space_as_admin(slug, body, headers=default_headers)
+    def update_space_in_system(slug, body, headers=default_headers)
       info("Updating Space \"#{slug}\"")
       put("#{@api_url}/spaces/#{slug}", body, headers)
     end

@@ -23,7 +23,7 @@ See the [Getting Started Guide](docs/GettingStarted.md) for getting started quic
 
 The following are a list of requirements to use this SDK
 
-### Ruby 2.0+
+### Ruby
 
 The Kinetic Ruby SDK requires Ruby 2.0+, which includes JRuby 9000+.  You can determine the version of Ruby you are using with the following command:
 
@@ -31,25 +31,9 @@ The Kinetic Ruby SDK requires Ruby 2.0+, which includes JRuby 9000+.  You can de
 ruby -v
 ```
 
-### Bundler Gem
+### Included Dependency Gems
 
-A [Gemfile](./Gemfile) is provided to automatically install the required gems using bundler.  This first requires that the bundler gem is installed.  Once bundler is installed, the rest of the gems can be installed.
-
-Install the Bundler gem:
-
-    gem install bundler
-
-*IMPORTANT NOTE*: If using [rbenv](https://github.com/rbenv/rbenv) to manage Ruby versions, run the following command.
-
-    rbenv rehash
-
-Finally, install the dependency gems:
-
-    bundle install
-
-### Dependency Gems
-
-The Kinetic Ruby SDK uses the following gems:
+The Kinetic Ruby SDK uses the following gems, which are conveniently packaged in the SDK.  You do not need to install these gems to the default gem path.
 
 - [mime-types](https://github.com/mime-types/ruby-mime-types) used by the multipart-post gem.
 - [multipart-post](https://github.com/nicksieger/multipart-post) for uploading files to the application REST APIs.
@@ -59,7 +43,16 @@ The Kinetic Ruby SDK uses the following gems:
 
 Each Kinetic Data application SDK is meant to be used independent of other application SDKs. With this in mind, each application SDK must be initialized individually.
 
-**Kinetic BridgeHub SDK example:**
+All of the HTTP methods return a KineticSdk::Utils::KineticHttpResponse object that contains additional methods to obtain information about the request status, the reponse body content, the response headers, and access to the raw response object.
+
+### Require the SDK
+
+```ruby
+# Assumes the SDK is installed to vendor/kinetic-sdk-rb
+require File.join(File.expand_path(File.dirname(__FILE__)), 'vendor', 'kinetic-sdk-rb', 'kinetic-sdk')
+```
+
+### Kinetic BridgeHub SDK example
 
 ```ruby
 bridgehub_sdk = KineticSdk::Bridgehub.new({
@@ -68,13 +61,19 @@ bridgehub_sdk = KineticSdk::Bridgehub.new({
   password: "password",
   options: {
     log_level: "info",
-    max_redirects: 10
+    max_redirects: 3
   }
 })
-bridgehub_sdk.method_foo()
+response = bridgehub_sdk.find_bridges()
+bridges = response.content['bridges']
+
+puts response.code            # String value of HTTP response code ("200", "400", "500", etc...)
+puts response.status          # Ruby Fixnum value of response.code (200, 400, 500, etc...)
+puts response.content         # Ruby Hash
+puts response.content_string  # JSON formatted response body
 ```
 
-**Kinetic FileHub SDK example:**
+### Kinetic FileHub SDK example
 
 ```ruby
 filehub_sdk = KineticSdk::Filehub.new({
@@ -83,13 +82,19 @@ filehub_sdk = KineticSdk::Filehub.new({
   password: "password",
   options: {
     log_level: "info",
-    max_redirects: 10
+    max_redirects: 3
   }
 })
-filehub_sdk.method_foo()
+response = filehub_sdk.find_filestores()
+filestores = response.content['filestores']
+
+puts response.code            # String value of HTTP response code ("200", "400", "500", etc...)
+puts response.status          # Ruby Fixnum value of response.code (200, 400, 500, etc...)
+puts response.content         # Ruby Hash
+puts response.content_string  # JSON formatted response body
 ```
 
-**Kinetic Request CE SDK example of a Space User:**
+### Kinetic Request CE SDK example of a Space User
 
 ```ruby
 space_sdk = KineticSdk::RequestCe.new({
@@ -99,13 +104,20 @@ space_sdk = KineticSdk::RequestCe.new({
   password: "password",
   options: {
     log_level: "info",
-    max_redirects: 10
+    max_redirects: 3
   }
 })
-space_sdk.method_foo()
+response = space_sdk.find_kapps()
+kapps = response.content['kapps']
+
+puts response.code            # String value of HTTP response code ("200", "400", "500", etc...)
+puts response.status          # Ruby Fixnum value of response.code (200, 400, 500, etc...)
+puts response.content         # Ruby Hash
+puts response.content_string  # JSON formatted response body
+
 ```
 
-**Kinetic Request CE SDK example of a System User:**
+### Kinetic Request CE SDK example of a System User
 
 ```ruby
 system_sdk = KineticSdk::RequestCe.new({
@@ -114,13 +126,18 @@ system_sdk = KineticSdk::RequestCe.new({
   password: "password",
   options: {
     log_level: "info",
-    max_redirects: 10
+    max_redirects: 3
   }
 })
-system_sdk.method_foo()
+response = system_sdk.add_space('My Company Space', 'my-company')
+
+puts response.code            # String value of HTTP response code ("200", "400", "500", etc...)
+puts response.status          # Ruby Fixnum value of response.code (200, 400, 500, etc...)
+puts response.content         # Ruby Hash
+puts response.content_string  # JSON formatted response body
 ```
 
-**Kinetic Task SDK example:**
+### Kinetic Task SDK example
 
 ```ruby
 task_sdk = KineticSdk::Task.new({
@@ -130,24 +147,28 @@ task_sdk = KineticSdk::Task.new({
   options: {
     export_directory: "/opt/exports/task-server-a",
     log_level: "info",
-    max_redirects: 10
+    max_redirects: 3
   }
 })
-task_sdk.method_foo()
+response = task_sdk.environment()
+
+puts response.code            # String value of HTTP response code ("200", "400", "500", etc...)
+puts response.status          # Ruby Fixnum value of response.code (200, 400, 500, etc...)
+puts response.content         # Ruby Hash
+puts response.content_string  # JSON formatted response body
 ```
 
 ## Advanced Usage
 
-If you need to make a custom HTTP call for some reason, there is a class that allows you to do that. Simply make sure the KineticSdk is required in your program:
-
-```ruby
-require 'kinetic-sdk-rb'
-```
+If you need to make a custom HTTP call for some reason, there is a class that allows you to do that. Simply make sure the KineticSdk is required in your program. See the [Getting Started Guide](docs/GettingStarted.md) for details.
 
 Then you need to instantiate a new instance of the KineticHttp class, and call the desired HTTP method with the appropriate information.  Each response will be returned as a KineticSdk::Utils::KineticHttpResponse object.
 
 ```ruby
-# instantiate the KineticHttp class with Basic authentication credentials
+# instantiate the KineticHttp class without authentication
+http = KineticSdk::Utils::KineticHttp.new
+
+# instantiate the KineticHttp class with Basic authentication
 http = KineticSdk::Utils::KineticHttp.new("john.doe@company.com", "s3cretP@ssw0rd")
 
 # call the appropriate method
@@ -171,13 +192,13 @@ response = http.patch(
 response = http.post(
   "https://my-server.com",
   { foo: 'foo', bar: 'bar' },
-  { "Custom Header" => "value" }.merge(default_headers))
+  { "Custom Header" => "a custom value" }.merge(default_headers))
 
 # custom HTTP post multipart/form-data (for file uploads)
 response = http.post_multipart(
   "https://my-server.com",
   { file: File.new('/path/file.txt', rb) },
-  { "Custom Header" => "value" }.merge(default_headers))
+  { "Custom Header" => "a custom value" }.merge(default_headers))
 
 # custom HTTP put
 response = http.put(
@@ -188,8 +209,34 @@ response = http.put(
 
 ## Additional Documentation
 
-The RDoc documentation can be generated by running the rake command.  This will provide detailed information for each module, class, and method.  The output can be found in the generated `rdoc` directory.
+The RDoc documentation for the SDK can be generated by running a rake command.  This will provide detailed information for each module, class, and method.  The output can be found in the generated `rdoc` directory.
+
+In order to do this however, the `yard` gem is required and must first be installed.
+
+This SDK includes a [Gemfile](./Gemfile) that can be used with the `bundler` gem to ensure the proper version is installed.
+
+Install the Bundler gem:
+
+    gem install bundler
+
+*IMPORTANT NOTE*: If using [rbenv](https://github.com/rbenv/rbenv) to manage Ruby versions, run the following command.
+
+    rbenv rehash
+
+Finally, install the dependency gems:
+
+    bundle install
+
+Now that the required documentation generation gem is installed, a simple Rake command can be run to generate the inline documentation.  For this SDK, the following commands are all equivalent:
 
 ```ruby
 bundle exec rake doc
+```
+
+```ruby
+bundle exec rake yard
+```
+
+```ruby
+bundle exec rake
 ```

@@ -25,7 +25,7 @@ module KineticSdk
       # @param url [String] url to send the request to
       # @param headers [Hash] hash of headers to send
       # @param redirect_limit [Fixnum] max number of times to redirect
-      # @return [Net::HTTPResponse] response
+      # @return [KineticSdk::Utils::KineticHttpResponse] response
       def delete(url, headers={}, redirect_limit=max_redirects)
         # parse the URL
         uri = URI.parse(url)
@@ -61,7 +61,7 @@ module KineticSdk
       # @param params [Hash] Query parameters that are added to the URL, such as +include+
       # @param headers [Hash] hash of headers to send
       # @param redirect_limit [Fixnum] max number of times to redirect
-      # @return [Net::HTTPResponse] response
+      # @return [KineticSdk::Utils::KineticHttpResponse] response
       def get(url, params={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
         uri = URI.parse(url)
@@ -99,7 +99,7 @@ module KineticSdk
       # @param data [Hash] the payload to send with the request
       # @param headers [Hash] hash of headers to send
       # @param redirect_limit [Fixnum] max number of times to redirect
-      # @return [Net::HTTPResponse] response
+      # @return [KineticSdk::Utils::KineticHttpResponse] response
       def patch(url, data={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
         uri = URI.parse(url)
@@ -138,7 +138,7 @@ module KineticSdk
       # @param data [Hash] the payload to send with the request
       # @param headers [Hash] hash of headers to send
       # @param redirect_limit [Fixnum] max number of times to redirect
-      # @return [Net::HTTPResponse] response
+      # @return [KineticSdk::Utils::KineticHttpResponse] response
       def post(url, data={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
         uri = URI.parse(url)
@@ -177,7 +177,7 @@ module KineticSdk
       # @param data [Hash] payload to send with the request
       # @param headers [Hash] hash of headers to send
       # @param redirect_limit [Fixnum] max number of times to redirect
-      # @return [Net::HTTPResponse] response
+      # @return [KineticSdk::Utils::KineticHttpResponse] response
       def post_multipart(url, data={}, headers={}, redirect_limit=max_redirects)
         # the Content-Type header is handled automoatically by Net::HTTP::Post::Multipart
         headers.delete_if { |k,v| k.to_s.downcase == "content-type" }
@@ -221,7 +221,7 @@ module KineticSdk
       # @param data [Hash] payload to send with the request
       # @param headers [Hash] hash of headers to send
       # @param redirect_limit [Fixnum] max number of times to redirect
-      # @return [Net::HTTPResponse] response
+      # @return [KineticSdk::Utils::KineticHttpResponse] response
       def put(url, data={}, headers={}, redirect_limit=max_redirects)
         # parse the URL
         uri = URI.parse(url)
@@ -300,12 +300,13 @@ module KineticSdk
       # @param password [String] password associated to the username
       # @return [Hash] Hash of headers
       #   - Accepts: application/json
-      #   - Authorization: Basic base64 hash of username and password
+      #   - Authorization: Basic base64 hash of username and password if username is provided
       #   - Content-Type: application/json
       #   - User-Agent: Kinetic Ruby SDK {KineticSdk.version}
       def default_headers(username=@username, password=@password)
-        header_accepts_json.merge(
-          header_basic_auth(username, password)).merge(header_content_json).merge(header_user_agent)
+        headers = header_accepts_json.merge(header_content_json).merge(header_user_agent)
+        headers.merge!(header_basic_auth(username, password)) unless username.nil?
+        headers
       end
 
       # Encode URI components

@@ -1,7 +1,14 @@
 require 'json'
 require 'yaml'
 
-pwd = File.dirname(File.expand_path(__FILE__))
+pwd = File.expand_path(File.dirname(__FILE__))
+gemdir = File.expand_path(File.join(pwd, '..', 'gems'))
+
+# add gem directories to load path
+$:.unshift File.join(gemdir, 'mime-types-3.1', 'lib')
+$:.unshift File.join(gemdir, 'mime-types-data-3.2016.0521', 'lib')
+$:.unshift File.join(gemdir, 'multipart-post-2.0.0', 'lib')
+$:.unshift File.join(gemdir, 'slugify-1.0.7', 'lib')
 
 # require version
 require File.join(pwd, 'kinetic-sdk', 'version')

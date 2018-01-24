@@ -8,9 +8,11 @@ The Kinetic SDK is a library that provides easy to use methods for interacting w
 
 ## How To
 
-This document assumes you the necessary [requirements](../README.md#requirements) installed on your client computer before proceeding.
+This document assumes you have the necessary [requirements](../README.md) installed on your client computer before proceeding.
 
-This guide assumes you have the `git` program installed on your client machine.  If not, you can download a zip file of the [latest Kinetic SDK package](https://github.com/kineticdata/kinetic-sdk-rb/archive/master.zip).  You would then unzip this file, and copy the extracted `kinetic-sdk-rb-master` directory to the `my_project/vendor/kinetic-sdk-rb` directory.
+This guide also assumes you have the `git` program installed on your client machine in order to obtain the latest kinetic-sdk-rb code from Github.
+
+If you do not have git and don't want to install it, you can download a zip file of the [latest Kinetic SDK code](https://github.com/kineticdata/kinetic-sdk-rb/archive/master.zip).  You would then unzip this file, and copy the extracted `kinetic-sdk-rb-master` directory to the `my_project/vendor/kinetic-sdk-rb` directory.
 
 ### Prepare a Ruby program
 
@@ -27,25 +29,14 @@ mkdir my_project/vendor
 
 git clone https://github.com/kineticdata/kinetic-sdk-rb.git my_project/vendor
 
-# copy the sample driver
+# copy the sample driver to your project's root directory
 
 cp my_project/vendor/kinetic-sdk-rb/samples/driver.rb my_project/driver.rb
-
-# install the required Ruby gems
-
-cd my_project/vendor/kinetic-sdk-rb
-gem install bundler
-bundle install
-
-# generate and open the inline Ruby documentation for the SDK
-
-bundle exec rake doc
-open rdoc/index.html
 ```
 
 ### Try the driver
 
-Modify the sample driver program with your Kinetic Request CE (or other Kinetic Application), and try it out.
+Modify the sample driver program with your Kinetic Request CE (or other Kinetic Application) information, and try it out.
 
 ```bash
 # make sure to change back to the project root directory
@@ -55,4 +46,20 @@ cd my_project
 # run the driver file
 
 ruby driver.rb
+```
+
+### Inline documentation
+
+If you would like to generate the inline documentation for this SDK, perform the following steps.
+
+```bash
+# install the bundler gem, and then then necessary documenation gems
+cd my_project/vendor/kinetic-sdk-rb
+gem install bundler
+bundle install
+
+# generate and open the inline Ruby documentation for the SDK
+
+bundle exec rake doc
+open rdoc/index.html
 ```
