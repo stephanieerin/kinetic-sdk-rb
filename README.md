@@ -57,7 +57,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), 'vendor', 'kinetic-s
 ```ruby
 bridgehub_sdk = KineticSdk::Bridgehub.new({
   app_server_url: "http://localhost:8080/kinetic-bridgehub",
-  login: "configuration-user",
+  username: "configuration-user",
   password: "password",
   options: {
     log_level: "info",
@@ -78,7 +78,7 @@ puts response.content_string  # JSON formatted response body
 ```ruby
 filehub_sdk = KineticSdk::Filehub.new({
   app_server_url: "http://localhost:8080/kinetic-filehub",
-  login: "configuration-user",
+  username: "configuration-user",
   password: "password",
   options: {
     log_level: "info",
@@ -100,7 +100,7 @@ puts response.content_string  # JSON formatted response body
 space_sdk = KineticSdk::RequestCe.new({
   app_server_url: "http://localhost:8080/kinetic",
   space_slug: "foo",
-  login: "space-user-1",
+  username: "space-user-1",
   password: "password",
   options: {
     log_level: "info",
@@ -122,7 +122,7 @@ puts response.content_string  # JSON formatted response body
 ```ruby
 system_sdk = KineticSdk::RequestCe.new({
   app_server_url: "http://localhost:8080/kinetic",
-  login: "configuration-user",
+  username: "configuration-user",
   password: "password",
   options: {
     log_level: "info",
@@ -142,7 +142,7 @@ puts response.content_string  # JSON formatted response body
 ```ruby
 task_sdk = KineticSdk::Task.new({
   app_server_url: "http://localhost:8080/kinetic-task",
-  login: "user-1",
+  username: "user-1",
   password: "password",
   options: {
     export_directory: "/opt/exports/task-server-a",

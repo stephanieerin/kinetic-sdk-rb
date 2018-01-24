@@ -9,7 +9,7 @@ module KineticSdk
     # Include the KineticHttpUtils module
     include KineticSdk::Utils::KineticHttpUtils
 
-    attr_reader :api_url, :api_v1_url, :config_user, :options, :server, :version
+    attr_reader :api_url, :api_v1_url, :config_user, :options, :server, :version, :username, :password
 
     # Initalize the Task SDK with the web server URL and user credentials, 
     # along with any custom option values.
@@ -62,6 +62,8 @@ module KineticSdk
       @config_user[:username] = opts[:username]
       @config_user[:password] = opts[:password]
       @server = opts[:app_server_url]
+      @username = @config_user[:username]
+      @password = @config_user[:password]
 
       # TODO: Better separation of APIv1 and APIv2
       @api_v1_url = "#{@server}/app/api/v1"

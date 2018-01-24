@@ -131,7 +131,7 @@ module KineticSdk
     def import_tree(tree, force_overwrite=false, headers=header_basic_auth)
       body = { "content" => tree }
       info("Importing Tree #{File.basename(tree)}")
-      post_multipart("/trees?force=#{force_overwrite}", body, headers)
+      post_multipart("#{@api_url}/trees?force=#{force_overwrite}", body, headers)
     end
 
     # Import a routine
@@ -146,7 +146,7 @@ module KineticSdk
     def import_routine(routine, force_overwrite=false, headers=header_basic_auth)
       body = { "content" => routine }
       info("Importing Routine #{File.basename(routine)}")
-      post_multipart("/trees?force=#{force_overwrite}", body, headers)
+      post_multipart("#{@api_url}/trees?force=#{force_overwrite}", body, headers)
     end
 
     # Find a single tree by title (Source Name :: Group Name :: Tree Name)
@@ -178,7 +178,7 @@ module KineticSdk
       raise StandardError.new "An export directory must be defined to export a tree." if @options[:export_directory].nil?
       info("Exporting tree \"#{title}\" to #{@options[:export_directory]}.")
       # Get the tree
-      response = find_tree( title, { "include" => "export" })
+      response = find_tree(title, { "include" => "export" })
       # Parse the response and export the tree
       tree = response.content
 

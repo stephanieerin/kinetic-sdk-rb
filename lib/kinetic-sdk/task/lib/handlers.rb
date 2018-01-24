@@ -56,7 +56,7 @@ module KineticSdk
     def import_handler(handler, force_overwrite=false, headers=header_basic_auth)
       body = { "package" => handler }
       info("Importing Handler #{File.basename(handler)}")
-      post_multipart("/handlers?force=#{force_overwrite}", body, headers)
+      post_multipart("#{@api_url}/handlers?force=#{force_overwrite}", body, headers)
     end
 
     # Modifies the properties and info values for a handler
