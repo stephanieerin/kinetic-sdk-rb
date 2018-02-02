@@ -19,15 +19,14 @@ If you do not have git and don't want to install it, you can download a zip file
 Prepare your Ruby program/script to use the Kinetic SDK.
 
 ```bash
-# create the project directory, and a vendor directory within the project directory
+# create the project directory
 
 mkdir my_project
-mkdir my_project/vendor
 
 # clone the kinetic-sdk-rb repository from GitHub
 # see above to download the zip file if you don't have the git client
 
-git clone https://github.com/kineticdata/kinetic-sdk-rb.git my_project/vendor
+git clone https://github.com/kineticdata/kinetic-sdk-rb.git my_project/vendor/kinetic-sdk-rb
 
 # copy the sample driver to your project's root directory
 
