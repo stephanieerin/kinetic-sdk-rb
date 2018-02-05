@@ -14,6 +14,7 @@ $:.unshift File.join(gemdir, 'slugify-1.0.7', 'lib')
 require File.join(pwd, 'kinetic-sdk', 'version')
 # require utilities
 require File.join(pwd, 'kinetic-sdk', 'utils',  'logger')
+require File.join(pwd, 'kinetic-sdk', 'utils',  'random')
 require File.join(pwd, 'kinetic-sdk', 'utils',  'kinetic-http')
 # require applications
 require File.join(pwd, 'kinetic-sdk', 'bridgehub',  'bridgehub-sdk')

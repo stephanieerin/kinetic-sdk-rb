@@ -197,7 +197,7 @@ response = http.post(
 # custom HTTP post multipart/form-data (for file uploads)
 response = http.post_multipart(
   "https://my-server.com",
-  { file: File.new('/path/file.txt', rb) },
+  { file: File.new('/path/file.txt', 'rb') },
   { "Custom Header" => "a custom value" }.merge(default_headers))
 
 # custom HTTP put
