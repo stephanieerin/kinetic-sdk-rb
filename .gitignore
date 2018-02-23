@@ -3,3 +3,4 @@
 .yardoc
 rdoc/
 /test
+/driver.rb
