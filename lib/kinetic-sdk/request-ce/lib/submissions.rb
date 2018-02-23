@@ -130,7 +130,7 @@ module KineticSdk
       end
 
       # Build Submission URL
-      url = "/kapps/#{kapp_slug}/forms/#{form_slug}/submissions"
+      url = "#{@api_url}/kapps/#{kapp_slug}/forms/#{form_slug}/submissions"
       # Return the response
       get(url, params, headers)
     end
@@ -157,7 +157,7 @@ module KineticSdk
       end
 
       # Build Submission URL
-      url = "/kapps/#{kapp_slug}/submissions"
+      url = "#{@api_url}/kapps/#{kapp_slug}/submissions"
       # Return the response
       get(url, params, headers)
     end
