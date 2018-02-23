@@ -411,13 +411,12 @@ module KineticSdk
       def initialize(object)
         case object
         when Net::HTTPResponse then
-          response = object
-          @code = response.code
-          @content_string = response.body
-          @content_type = response.content_type
-          @headers = response.header.each_header.inject({}) { |h,(k,v)| h[k] = v; h }
-          @message = response.message
-          @response = response.response
+          @code = object.code
+          @content_string = object.body
+          @content_type = object.content_type
+          @headers = object.each_header.inject({}) { |h,(k,v)| h[k] = v; h }
+          @message = object.message
+          @response = object
           @status = @code.to_i
 
           # if content type is json, try to parse the content string
@@ -429,11 +428,10 @@ module KineticSdk
               nil
             end
         when StandardError then
-          error = object
           @code = "0"
-          @backtrace = error.backtrace
-          @exception = error.exception
-          @message = error.message
+          @backtrace = object.backtrace
+          @exception = object.exception
+          @message = object.message
           @status = @code.to_i
         else
           raise StandardError.new("Invalid response object: #{object.class}")
