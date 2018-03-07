@@ -46,5 +46,14 @@ module KineticSdk
       put("#{@api_url}/spaces/#{slug}", body, headers)
     end
 
+    # Reset the license count (System API)
+    #
+    # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def reset_license_count(headers=default_headers)
+      info("Resetting License Count")
+      put("#{@api_url}/license/reset", {}, headers)
+    end
+
   end
 end
