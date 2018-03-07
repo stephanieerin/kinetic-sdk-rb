@@ -32,7 +32,7 @@ module KineticSdk
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_space_security_policy_definitions(headers=default_headers)
-      find_space_security_policy_definitions({}, headers).content["securityPolicyDefinitions"].each do |s|
+      (find_space_security_policy_definitions({}, headers).content["securityPolicyDefinitions"] || []).each do |s|
         delete_space_security_policy_definition(s['name'], headers)
       end
     end
