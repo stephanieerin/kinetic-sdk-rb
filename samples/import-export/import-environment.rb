@@ -804,7 +804,7 @@ if options.configureBH
   end
 
   # Delete all Bridge access keys and create a new one
-  bridgehub_sdk.find_access_keys(bridge_slug).content["accessKeys"].each do |access_key|
+  (bridgehub_sdk.find_access_keys(bridge_slug).content["accessKeys"] || []).each do |access_key|
     bridgehub_sdk.delete_access_key(bridge_slug, access_key["id"])
   end
 
@@ -862,7 +862,7 @@ if options.configureFH
   end
 
   # Delete all Filestore access keys and create a new one
-  filehub_sdk.find_access_keys(filestore_slug).content["accessKeys"].each do |access_key|
+  (filehub_sdk.find_access_keys(filestore_slug).content["accessKeys"] || []).each do |access_key|
     filehub_sdk.delete_access_key(filestore_slug, access_key["id"])
   end
 
