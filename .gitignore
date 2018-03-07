@@ -3,4 +3,5 @@
 .yardoc
 rdoc/
 /test
-/driver.rb
+/*.rb
+!/kinetic-sdk.rb
