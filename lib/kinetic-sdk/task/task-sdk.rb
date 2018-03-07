@@ -1,5 +1,7 @@
 Dir[File.join(File.dirname(File.expand_path(__FILE__)), "lib", "**", "*.rb")].each {|file| require file }
 
+require 'slugify'
+
 module KineticSdk
   
   # Task is a Ruby class that acts as a wrapper for the Kinetic Task REST API 
@@ -72,6 +74,10 @@ module KineticSdk
       # set any constants or calculated values
       @api_url = @api_v2_url
       @version = 2
+    end
+
+    def slugify(input)
+      input.slugify
     end
 
   end
