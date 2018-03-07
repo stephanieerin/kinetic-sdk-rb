@@ -24,6 +24,16 @@ module KineticSdk
       delete("#{@api_url}/spaces/#{slug}", headers)
     end
 
+    # Find all spaces
+    #
+    # @param params [Hash] Query parameters that are added to the URL, such as +include+
+    # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_spaces(params={}, headers=default_headers)
+      info("Finding Spaces")
+      get("#{@api_url}/spaces", params, headers)
+    end
+
     # Find the space (System API)
     #
     # @param slug [String] slug of the space
