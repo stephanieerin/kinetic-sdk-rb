@@ -14,6 +14,7 @@
 #      -s <new-space-slug> \
 #      -n <new-space-name> \
 #      -c <config-file-name.yaml> \
+#      -o <overwrite-if-exists> \
 #      -t <type of import>
 ################################################################################
 
@@ -42,6 +43,7 @@ class ImportOptions
     options.export_space_slug = nil
     options.space_slug = nil
     options.space_name = nil
+    options.import_overwrite = false
     options.import_type = "create"
 
     opt_parser = OptionParser.new do |opts|
@@ -70,12 +72,19 @@ class ImportOptions
         options.cfg = cfg_file
       end
 
+      opts.on("-o IMPORT_OVERWRITE", %w[true false],
+              "Whether to overwrite the data if it already exists: (true|false)",
+              "  Existing data will be deleted and recreated",
+              "  Existing data will remain intact, import will skip") do |overwrite|
+        options.import_overwrite = overwrite.to_s.downcase == "true"
+      end
+
       opts.on("-t IMPORT_TYPE", IMPORT_TYPES,
-              "The type of import to do: (ce|task|ce/task|all)",
-              "  CE Will Only Import CE Data",
-              "  Task Will Only Import Task Data",
-              "  CE/TASK will import CE and Task Data and configure both",
-              "  All will import CE/Task & configure Filehub and Bridgehub as well") do |type|
+                    "The type of import to do: (ce|task|ce/task|all)",
+                    "  CE Will Only Import CE Data",
+                    "  Task Will Only Import Task Data",
+                    "  CE/TASK will import CE and Task Data and configure both",
+                    "  All will import CE/Task & configure Filehub and Bridgehub as well") do |type|
         if type.to_s.downcase == "ce"
           options.importCE = true
           options.importTask = false
@@ -210,256 +219,265 @@ if options.importCE
     options: { "log_level" => env["log_level"] }
   })
 
-  # Delete the space if it exists
-  if requestce_sdk_system.space_exists?(space_slug)
+  # Check if the space exists
+  space_exists = requestce_sdk_system.space_exists?(space_slug)
+  import = false
+
+  if !space_exists
+    import = true
+  elsif space_exists && options.import_overwrite
+    # Delete the space
     requestce_sdk_system.delete_space(space_slug)
+    import = true
   end
 
-  # Create the space
-  puts "Creating the \"#{space_slug}\" space"
-  requestce_sdk_system.add_space(space_name, space_slug)
+  if import
+    # Create the space
+    puts "Creating the \"#{space_slug}\" space"
+    requestce_sdk_system.add_space(space_name, space_slug)
 
-  # Create a Space User that will be used with integrations (eg: Kinetic Task)
-  puts "Adding the \"#{ce_integration_username}\" user to the \"#{space_slug}\" Request CE space."
-  requestce_sdk_system.add_user({
-    "space_slug" => space_slug,
-    "username" => ce_integration_username,
-    "password" => ce_integration_password,
-    "displayName" => ce_integration_displayname,
-    "enabled" => true,
-    "spaceAdmin" => true
-  })
+    # Create a Space User that will be used with integrations (eg: Kinetic Task)
+    puts "Adding the \"#{ce_integration_username}\" user to the \"#{space_slug}\" Request CE space."
+    requestce_sdk_system.add_user({
+      "space_slug" => space_slug,
+      "username" => ce_integration_username,
+      "password" => ce_integration_password,
+      "displayName" => ce_integration_displayname,
+      "enabled" => true,
+      "spaceAdmin" => true
+    })
 
-  # Create a Space Admin user with a known password
-  puts "Adding the \"#{ce_credentials_space_admin["username"]}\" user to the \"#{space_slug}\" Request CE space."
-  requestce_sdk_system.add_user({
-    "space_slug" => space_slug,
-    "username" => ce_credentials_space_admin["username"],
-    "password" => ce_credentials_space_admin["password"],
-    "displayName" => "Space Administrator",
-    "enabled" => true,
-    "spaceAdmin" => true
-  })
+    # Create a Space Admin user with a known password
+    puts "Adding the \"#{ce_credentials_space_admin["username"]}\" user to the \"#{space_slug}\" Request CE space."
+    requestce_sdk_system.add_user({
+      "space_slug" => space_slug,
+      "username" => ce_credentials_space_admin["username"],
+      "password" => ce_credentials_space_admin["password"],
+      "displayName" => "Space Administrator",
+      "enabled" => true,
+      "spaceAdmin" => true
+    })
 
-  # Log into the Space with the Space Admin user
-  requestce_sdk_space = KineticSdk::RequestCe.new({
-    app_server_url: ce_server,
-    space_slug: space_slug,
-    username: ce_credentials_space_admin["username"],
-    password: ce_credentials_space_admin["password"],
-    options: { "log_level" => env["log_level"] }
-  })
+    # Log into the Space with the Space Admin user
+    requestce_sdk_space = KineticSdk::RequestCe.new({
+      app_server_url: ce_server,
+      space_slug: space_slug,
+      username: ce_credentials_space_admin["username"],
+      password: ce_credentials_space_admin["password"],
+      options: { "log_level" => env["log_level"] }
+    })
 
-  # Locate Space Import Directory
-  request_ce_dir = "#{space_dir}/ce"
+    # Locate Space Import Directory
+    request_ce_dir = "#{space_dir}/ce"
 
-  # Create Space Attribute Definitions
-  spaceAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/spaceAttributeDefinitions.json"))
-  spaceAttributeDefinitions.each do |obj|
-    requestce_sdk_space.add_space_attribute_definition(
-      obj["name"],
-      obj["description"],
-      obj["allowsMultiple"]
+    # Create Space Attribute Definitions
+    spaceAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/spaceAttributeDefinitions.json"))
+    spaceAttributeDefinitions.each do |obj|
+      requestce_sdk_space.add_space_attribute_definition(
+        obj["name"],
+        obj["description"],
+        obj["allowsMultiple"]
+      )
+    end
+
+    # Create Team Attribute Definitions
+    spaceAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/teamAttributeDefinitions.json"))
+    spaceAttributeDefinitions.each do |obj|
+      requestce_sdk_space.add_space_attribute_definition(
+        obj["name"],
+        obj["description"],
+        obj["allowsMultiple"]
+      )
+    end
+
+    # Create User Attribute Definitions
+    userAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/userAttributeDefinitions.json"))
+    userAttributeDefinitions.each do |obj|
+      requestce_sdk_space.add_user_attribute_definition(
+        obj["name"],
+        obj["description"],
+        obj["allowsMultiple"]
+      )
+    end
+
+    # Create User Attribute Definitions
+    userProfileAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/userProfileAttributeDefinitions.json"))
+    userProfileAttributeDefinitions.each do |obj|
+      requestce_sdk_space.add_user_profile_attribute_definition(
+        obj["name"],
+        obj["description"],
+        obj["allowsMultiple"]
+      )
+    end
+
+    # Associate the Space Admin user to the "Kinetic Data" Group.  This will allow
+    # the kdadmin user to be a Kinetic Task administrator.
+    requestce_sdk_space.add_user_attribute(
+      ce_credentials_space_admin["username"],
+      "Kinetic Task Groups",
+      "Kinetic Data"
     )
-  end
 
-  # Create Team Attribute Definitions
-  spaceAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/teamAttributeDefinitions.json"))
-  spaceAttributeDefinitions.each do |obj|
-    requestce_sdk_space.add_space_attribute_definition(
-      obj["name"],
-      obj["description"],
-      obj["allowsMultiple"]
-    )
-  end
+    # Update the Space with all attributes and properties
+    space_json = JSON.parse(File.read("#{request_ce_dir}/space.json"))
+    # Remove the space slug and space name (slug/name from the template)
+    space_json.delete("slug")
+    space_json.delete("name")
+    requestce_sdk_space.update_space(space_json)
+    # Set Company Name Attribute on Space
+    requestce_sdk_space.add_space_attribute("Company Name", "#{space_name}")
 
-  # Create User Attribute Definitions
-  userAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/userAttributeDefinitions.json"))
-  userAttributeDefinitions.each do |obj|
-    requestce_sdk_space.add_user_attribute_definition(
-      obj["name"],
-      obj["description"],
-      obj["allowsMultiple"]
-    )
-  end
-
-  # Create User Attribute Definitions
-  userProfileAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/userProfileAttributeDefinitions.json"))
-  userProfileAttributeDefinitions.each do |obj|
-    requestce_sdk_space.add_user_profile_attribute_definition(
-      obj["name"],
-      obj["description"],
-      obj["allowsMultiple"]
-    )
-  end
-
-  # Associate the Space Admin user to the "Kinetic Data" Group.  This will allow
-  # the kdadmin user to be a Kinetic Task administrator.
-  requestce_sdk_space.add_user_attribute(
-    ce_credentials_space_admin["username"],
-    "Kinetic Task Groups",
-    "Kinetic Data"
-  )
-
-  # Update the Space with all attributes and properties
-  space_json = JSON.parse(File.read("#{request_ce_dir}/space.json"))
-  # Remove the space slug and space name (slug/name from the template)
-  space_json.delete("slug")
-  space_json.delete("name")
-  requestce_sdk_space.update_space(space_json)
-  # Set Company Name Attribute on Space
-  requestce_sdk_space.add_space_attribute("Company Name", "#{space_name}")
-
-  # Import Bridges
-  bridges_dir = "#{request_ce_dir}/bridges/bridges"
-  Dir["#{bridges_dir}/*"].each do |dirname|
-    bridge = JSON.parse(File.read("#{dirname}"))
-    bridge.delete("key")
-    requestce_sdk_space.add_bridge(bridge)
-  end
-
-  # Import Bridge Models
-  bridge_models_dir = "#{request_ce_dir}/bridges/bridgeModels"
-  Dir["#{bridge_models_dir}/*"].each do |dirname|
-    requestce_sdk_space.add_bridge_model(JSON.parse(File.read("#{dirname}")))
-  end
-
-  # Import Teams
-  teams_dir = "#{request_ce_dir}/teams"
-  Dir["#{teams_dir}/*"].each do |dirname|
-    requestce_sdk_space.add_team(JSON.parse(File.read("#{dirname}")))
-  end
-
-  # Delete OOTB Catalog Kapp
-  requestce_sdk_space.delete_kapp("catalog");
-
-  # Import Kapps
-  Dir["#{request_ce_dir}/kapp-*"].each do |dirname|
-
-    # Import Kapp
-    kapp_json = JSON.parse(File.read("#{dirname}/kapp.json"))
-    kapp_slug = kapp_json['slug']
-    requestce_sdk_space.add_kapp(kapp_json['name'], kapp_json['slug'], kapp_json)
-
-    # Import Category Attribute Definitions
-    obj_json = JSON.parse(File.read("#{dirname}/categoryAttributeDefinitions.json"))
-    obj_json.each do |obj|
-      requestce_sdk_space.add_category_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+    # Import Bridges
+    bridges_dir = "#{request_ce_dir}/bridges/bridges"
+    Dir["#{bridges_dir}/*"].each do |dirname|
+      bridge = JSON.parse(File.read("#{dirname}"))
+      bridge.delete("key")
+      requestce_sdk_space.add_bridge(bridge)
     end
 
-    # Import Form Attribute Definitions
-    obj_json = JSON.parse(File.read("#{dirname}/formAttributeDefinitions.json"))
-    obj_json.each do |obj|
-      requestce_sdk_space.add_form_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+    # Import Bridge Models
+    bridge_models_dir = "#{request_ce_dir}/bridges/bridgeModels"
+    Dir["#{bridge_models_dir}/*"].each do |dirname|
+      requestce_sdk_space.add_bridge_model(JSON.parse(File.read("#{dirname}")))
     end
 
-    # Import Kapp Attribute Definitions
-    obj_json = JSON.parse(File.read("#{dirname}/kappAttributeDefinitions.json"))
-    obj_json.each do |obj|
-      requestce_sdk_space.add_kapp_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+    # Import Teams
+    teams_dir = "#{request_ce_dir}/teams"
+    Dir["#{teams_dir}/*"].each do |dirname|
+      requestce_sdk_space.add_team(JSON.parse(File.read("#{dirname}")))
     end
 
-    # Import Security Policy Definitions
-    obj_json = JSON.parse(File.read("#{dirname}/securityPolicyDefinitions.json"))
-    # first delete all existing security policy definitions
-    requestce_sdk_space.delete_security_policy_definitions(kapp_slug)
-    # now import the form types defined in the space
-    obj_json.each do |obj|
-      requestce_sdk_space.add_security_policy_definition(kapp_slug, {
-        "name" => obj['name'],
-        "message" => obj['message'],
-        "rule" => obj['rule'],
-        "type" => obj['type']
-      })
-    end
+    # Delete OOTB Catalog Kapp
+    requestce_sdk_space.delete_kapp("catalog");
 
-    # Import Form Types
-    obj_json = JSON.parse(File.read("#{dirname}/formTypes.json"))
-    # first delete all existing form type
-    requestce_sdk_space.delete_form_types_on_kapp(kapp_slug)
-    # now import the form types defined in the space
-    obj_json.each do |obj|
-      requestce_sdk_space.add_form_type_on_kapp(kapp_slug, obj)
-    end
+    # Import Kapps
+    Dir["#{request_ce_dir}/kapp-*"].each do |dirname|
 
-    # Import Categories
-    obj_json = JSON.parse(File.read("#{dirname}/categories.json"))
-    obj_json.each do |obj|
-      requestce_sdk_space.add_category_on_kapp(kapp_slug, obj)
-    end
+      # Import Kapp
+      kapp_json = JSON.parse(File.read("#{dirname}/kapp.json"))
+      kapp_slug = kapp_json['slug']
+      requestce_sdk_space.add_kapp(kapp_json['name'], kapp_json['slug'], kapp_json)
 
-    # Import Forms
-    Dir["#{dirname}/forms/*"].each do |form|
-      requestce_sdk_space.add_form(kapp_slug, JSON.parse(File.read("#{form}")))
-    end
+      # Import Category Attribute Definitions
+      obj_json = JSON.parse(File.read("#{dirname}/categoryAttributeDefinitions.json"))
+      obj_json.each do |obj|
+        requestce_sdk_space.add_category_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+      end
 
-    # Import Submissions
-    submissions_count = 0
-    Dir["#{dirname}/data/*"].each do |form|
-      # Parse form slug from directory path
-      form_slug = File.basename(form, '.json')
-      puts "Importing submissions for: #{form_slug}"
-      # Each submission is a single line on the export file
-      File.readlines(form).each do |line|
-        submission = JSON.parse(line)
-        requestce_sdk_space.add_submission(kapp_slug, form_slug, {
-          "origin" => submission['origin'],
-          "parent" => submission['parent'],
-          "values" => submission['values']
+      # Import Form Attribute Definitions
+      obj_json = JSON.parse(File.read("#{dirname}/formAttributeDefinitions.json"))
+      obj_json.each do |obj|
+        requestce_sdk_space.add_form_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+      end
+
+      # Import Kapp Attribute Definitions
+      obj_json = JSON.parse(File.read("#{dirname}/kappAttributeDefinitions.json"))
+      obj_json.each do |obj|
+        requestce_sdk_space.add_kapp_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+      end
+
+      # Import Security Policy Definitions
+      obj_json = JSON.parse(File.read("#{dirname}/securityPolicyDefinitions.json"))
+      # first delete all existing security policy definitions
+      requestce_sdk_space.delete_security_policy_definitions(kapp_slug)
+      # now import the form types defined in the space
+      obj_json.each do |obj|
+        requestce_sdk_space.add_security_policy_definition(kapp_slug, {
+          "name" => obj['name'],
+          "message" => obj['message'],
+          "rule" => obj['rule'],
+          "type" => obj['type']
         })
-        if (submissions_count += 1) % 25 == 0
-          puts "Resetting the Request CE license submission count"
-          requestce_sdk_system.reset_license_count 
+      end
+
+      # Import Form Types
+      obj_json = JSON.parse(File.read("#{dirname}/formTypes.json"))
+      # first delete all existing form type
+      requestce_sdk_space.delete_form_types_on_kapp(kapp_slug)
+      # now import the form types defined in the space
+      obj_json.each do |obj|
+        requestce_sdk_space.add_form_type_on_kapp(kapp_slug, obj)
+      end
+
+      # Import Categories
+      obj_json = JSON.parse(File.read("#{dirname}/categories.json"))
+      obj_json.each do |obj|
+        requestce_sdk_space.add_category_on_kapp(kapp_slug, obj)
+      end
+
+      # Import Forms
+      Dir["#{dirname}/forms/*"].each do |form|
+        requestce_sdk_space.add_form(kapp_slug, JSON.parse(File.read("#{form}")))
+      end
+
+      # Import Submissions
+      submissions_count = 0
+      Dir["#{dirname}/data/*"].each do |form|
+        # Parse form slug from directory path
+        form_slug = File.basename(form, '.json')
+        puts "Importing submissions for: #{form_slug}"
+        # Each submission is a single line on the export file
+        File.readlines(form).each do |line|
+          submission = JSON.parse(line)
+          requestce_sdk_space.add_submission(kapp_slug, form_slug, {
+            "origin" => submission['origin'],
+            "parent" => submission['parent'],
+            "values" => submission['values']
+          })
+          if (submissions_count += 1) % 25 == 0
+            puts "Resetting the Request CE license submission count"
+            requestce_sdk_system.reset_license_count 
+          end
         end
+      end
+
+      # Import Kapp Webhooks
+      obj_json = JSON.parse(File.read("#{dirname}/webhooks.json"))
+      obj_json.each do |obj|
+        requestce_sdk_space.add_webhook_on_kapp(kapp_slug, obj)
       end
     end
 
-    # Import Kapp Webhooks
-    obj_json = JSON.parse(File.read("#{dirname}/webhooks.json"))
-    obj_json.each do |obj|
-      requestce_sdk_space.add_webhook_on_kapp(kapp_slug, obj)
+    # Import Space Webhooks
+    webhooks = JSON.parse(File.read("#{request_ce_dir}/webhooks.json"))
+    webhooks.each do |obj|
+      requestce_sdk_space.add_space_webhook(obj)
     end
-  end
 
-  # Import Space Webhooks
-  webhooks = JSON.parse(File.read("#{request_ce_dir}/webhooks.json"))
-  webhooks.each do |obj|
-    requestce_sdk_space.add_space_webhook(obj)
-  end
-
-  # Update Kinetic Task webhook URLs to point to the task server
-  requestce_sdk_space.find_webhooks_on_space.content['webhooks'].each do |webhook|
-    url = webhook['url']
-    # if the webhook contains a Kinetic Task URL, replace the server/host portion
-    if url.index('/kinetic-task/app/api/v1') > -1
-      apiIndex = url.index('/app/api/v1')
-      url = url.sub(url.slice(0..apiIndex-1), task_server)
-      requestce_sdk_space.update_webhook_on_space(webhook['name'], { "url" => url })
-    end
-  end
-  requestce_sdk_space.find_kapps.content['kapps'].each do |kapp|
-    requestce_sdk_space.find_webhooks_on_kapp(kapp['slug']).content['webhooks'].each do |webhook|
+    # Update Kinetic Task webhook URLs to point to the task server
+    requestce_sdk_space.find_webhooks_on_space.content['webhooks'].each do |webhook|
       url = webhook['url']
       # if the webhook contains a Kinetic Task URL, replace the server/host portion
       if url.index('/kinetic-task/app/api/v1') > -1
         apiIndex = url.index('/app/api/v1')
         url = url.sub(url.slice(0..apiIndex-1), task_server)
-        requestce_sdk_space.update_webhook_on_kapp(kapp['slug'], webhook['name'], { "url" => url })
+        requestce_sdk_space.update_webhook_on_space(webhook['name'], { "url" => url })
       end
     end
+    requestce_sdk_space.find_kapps.content['kapps'].each do |kapp|
+      requestce_sdk_space.find_webhooks_on_kapp(kapp['slug']).content['webhooks'].each do |webhook|
+        url = webhook['url']
+        # if the webhook contains a Kinetic Task URL, replace the server/host portion
+        if url.index('/kinetic-task/app/api/v1') > -1
+          apiIndex = url.index('/app/api/v1')
+          url = url.sub(url.slice(0..apiIndex-1), task_server)
+          requestce_sdk_space.update_webhook_on_kapp(kapp['slug'], webhook['name'], { "url" => url })
+        end
+      end
+    end
+
+    # Set the value of the "Response Server Url" Space attribute
+    requestce_sdk_space.add_space_attribute("Discussion Server Url", "")
+    # Set the value of the "Task Server Url" Space attribute
+    requestce_sdk_space.add_space_attribute("Task Server Url", task_server)
+    # Set the value of the "Web Server Url" Space attribute
+    requestce_sdk_space.add_space_attribute("Web Server Url", ce_server)
+
+    # Update Bridge on Request CE with the bridgehub slug value.
+    requestce_sdk_space.update_bridge("Kinetic Core", {
+      "url" => "#{env['bridgehub']['server']}/app/api/v1/bridges/#{bridge_slug}/"
+    })
   end
-
-  # Set the value of the "Response Server Url" Space attribute
-  requestce_sdk_space.add_space_attribute("Discussion Server Url", "")
-  # Set the value of the "Task Server Url" Space attribute
-  requestce_sdk_space.add_space_attribute("Task Server Url", task_server)
-  # Set the value of the "Web Server Url" Space attribute
-  requestce_sdk_space.add_space_attribute("Web Server Url", ce_server)
-
-  # Update Bridge on Request CE with the bridgehub slug value.
-  requestce_sdk_space.update_bridge("Kinetic Core", {
-    "url" => "#{env['bridgehub']['server']}/app/api/v1/bridges/#{bridge_slug}/"
-  })
 end
 
 #--------------------------------------------------------------------------
