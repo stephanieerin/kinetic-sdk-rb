@@ -46,7 +46,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_access_keys(headers=header_basic_auth)
       info("Deleting all access keys")
-      JSON.parse(find_access_keys(headers))["accessKeys"].each do |access_key|
+      (find_access_keys(headers).content["accessKeys"] || []).each do |access_key|
         delete("#{@api_url}/access_keys/#{encode(access_key['identifier'])}", headers)
       end
     end

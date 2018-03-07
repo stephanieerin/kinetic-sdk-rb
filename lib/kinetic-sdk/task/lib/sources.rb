@@ -49,7 +49,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_sources(headers=header_basic_auth)
       info("Deleting all sources")
-      find_sources(headers).content['sources'].each do |source|
+      (find_sources(headers).content['sources'] || []).each do |source|
         delete("#{@api_url}/sources/#{encode(source['name'])}", headers)
       end
     end

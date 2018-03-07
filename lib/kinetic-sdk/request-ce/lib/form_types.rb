@@ -31,7 +31,7 @@ module KineticSdk
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_form_types_on_kapp(kapp_slug, headers=default_headers)
-      find_form_types_on_kapp(kapp_slug, {}, headers).content["formTypes"].each do |form_type|
+      (find_form_types_on_kapp(kapp_slug, {}, headers).content["formTypes"] || []).each do |form_type|
         delete_form_type(kapp_slug, form_type['name'], headers)
       end
     end

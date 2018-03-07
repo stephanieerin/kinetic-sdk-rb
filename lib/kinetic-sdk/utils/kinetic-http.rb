@@ -33,9 +33,7 @@ module KineticSdk
         debug("DELETE #{uri}  #{headers.inspect}")
 
         # build the http object
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.set_debug_output($stdout) if trace?
-        http.use_ssl = (uri.scheme == 'https')
+        http = build_http(uri)
         # build the request
         request = Net::HTTP::Delete.new(uri.request_uri, headers)
 
@@ -71,9 +69,7 @@ module KineticSdk
         debug("GET #{uri}  #{headers.inspect}")
 
         # build the http object
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.set_debug_output($stdout) if trace?
-        http.use_ssl = (uri.scheme == 'https')
+        http = build_http(uri)
         # build the request
         request = Net::HTTP::Get.new(uri.request_uri, headers)
 
@@ -109,9 +105,7 @@ module KineticSdk
         # unless the data is already a string, assume JSON and convert to string
         data = data.to_json unless data.is_a? String
         # build the http object
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.set_debug_output($stdout) if trace?
-        http.use_ssl = (uri.scheme == 'https')
+        http = build_http(uri)
         # build the request
         request = Net::HTTP::Patch.new(uri.request_uri, headers)
         request.body = data
@@ -148,9 +142,7 @@ module KineticSdk
         # unless the data is already a string, assume JSON and convert to string
         data = data.to_json unless data.is_a? String
         # build the http object
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.set_debug_output($stdout) if trace?
-        http.use_ssl = (uri.scheme == 'https')
+        http = build_http(uri)
         # build the request
         request = Net::HTTP::Post.new(uri.request_uri, headers)
         request.body = data
@@ -193,9 +185,7 @@ module KineticSdk
         end
 
         # build the http object
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.set_debug_output($stdout) if trace?
-        http.use_ssl = (uri.scheme == 'https')
+        http = build_http(uri)
         # build the request
         request = Net::HTTP::Post::Multipart.new(uri.request_uri, payload)
         headers.each { |k,v| request.add_field(k, v) }
@@ -231,9 +221,7 @@ module KineticSdk
         # unless the data is already a string, assume JSON and convert to string
         data = data.to_json unless data.is_a? String
         # build the http object
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.set_debug_output($stdout) if trace?
-        http.use_ssl = (uri.scheme == 'https')
+        http = build_http(uri)
         # build the request
         request = Net::HTTP::Put.new(uri.request_uri, headers)
         request.body = data
@@ -345,6 +333,21 @@ module KineticSdk
           @options['max_redirects']
         )
         limit.nil? ? 5 : limit.to_i
+      end
+
+      private
+
+      # Build the Net::HTTP object.
+      #
+      # @param uri [URI] the URI for the HTTP request
+      # @return [Net::HTTP]
+      def build_http(uri)
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.set_debug_output($stdout) if trace?
+        http.use_ssl = (uri.scheme == 'https')
+        http.read_timeout=60
+        http.open_timeout=60
+        http
       end
 
     end

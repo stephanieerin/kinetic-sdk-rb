@@ -29,7 +29,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_groups(headers=header_basic_auth)
       info("Deleting all groups")
-      find_groups(headers).content['groups'].each do |group|
+      (find_groups(headers).content['groups'] || []).each do |group|
         delete("#{@api_url}/groups/#{encode(group['name'])}", headers)
       end
     end
@@ -61,7 +61,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def export_groups(headers=header_basic_auth)
       raise StandardError.new "An export directory must be defined to export groups." if @options[:export_directory].nil?
-      find_groups.content["groups"].each do |group|
+      (find_groups.content["groups"] || []).each do |group|
         export_group(group)
       end
     end

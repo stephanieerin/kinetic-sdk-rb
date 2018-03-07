@@ -54,7 +54,7 @@ module KineticSdk
         params = { "source" => source_name }
       end
 
-      find_trees(params, headers).content['trees'].each do |tree|
+      (find_trees(params, headers).content['trees'] || []).each do |tree|
         info("Deleting tree \"#{tree['title']}\"")
         delete("#{@api_url}/trees/#{encode(tree['title'])}", headers)
       end
@@ -107,7 +107,7 @@ module KineticSdk
       response = get("#{@api_url}/trees", params, headers)
 
       routines = []
-      response.content["trees"].each do |tree|
+      (response.content["trees"] || []).each do |tree|
         routines.push(tree) unless tree['definitionId'].nil?
       end
       final_content = { "trees" => routines }
@@ -208,7 +208,7 @@ module KineticSdk
       raise StandardError.new "An export directory must be defined to export trees." if @options[:export_directory].nil?
       if source_name.nil?
         info("Exporting all trees and routines to #{@options[:export_directory]}.")
-        find_sources.content["sourceRoots"].each do |sourceRoot|
+        (find_sources.content["sourceRoots"] || []).each do |sourceRoot|
           export_trees(sourceRoot['name'])
         end
         return
@@ -221,7 +221,7 @@ module KineticSdk
       # Get all the trees and routines for the source
       response = find_trees({ "source" => source_name, "include" => "export" })
       # Parse the response and export each tree
-      response.content["trees"].each do |tree|
+      (response.content["trees"] || []).each do |tree|
         # determine which directory to write the file to
         if tree['sourceGroup'] == "-"
           # create the directory if it doesn't yet exist

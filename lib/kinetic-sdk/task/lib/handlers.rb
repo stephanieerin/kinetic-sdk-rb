@@ -19,7 +19,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_handlers(headers=header_basic_auth)
       info("Deleting all handlers")
-      find_handlers(headers).content['handlers'].each do |handler|
+      (find_handlers(headers).content['handlers'] || []).each do |handler|
         delete("#{@api_url}/handlers/#{handler['definition_id']}", headers)
       end
     end
@@ -96,7 +96,7 @@ module KineticSdk
       # Get the handler metadata to geta all handler_ids
       response = find_handlers(headers)
       # Parse the response and export each handler
-      response.content["handlers"].each do |handler|
+      (response.content["handlers"] || []).each do |handler|
         export_handler(handler['definitionId'], headers)
       end
     end

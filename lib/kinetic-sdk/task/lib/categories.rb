@@ -33,7 +33,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_categories(headers=header_basic_auth)
       info("Deleting all categories")
-      find_categories(headers).content["categories"].each do |category|
+      (find_categories(headers).content["categories"] || []).each do |category|
         delete_category(category['name'], headers)
       end
     end
@@ -74,7 +74,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def export_categories(headers=header_basic_auth)
       raise StandardError.new "An export directory must be defined to export categories." if @options[:export_directory].nil?
-      find_categories({ "include" => "handlers,trees,policyRules" }).content["categories"].each do |category|
+      (find_categories({ "include" => "handlers,trees,policyRules" }).content["categories"] || []).each do |category|
         export_category(category)
       end
     end

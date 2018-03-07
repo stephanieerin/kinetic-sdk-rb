@@ -36,7 +36,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_users(headers=header_basic_auth)
       info("Deleting all users")
-      find_users(headers).content["users"].each do |user|
+      (find_users(headers).content["users"] || []).each do |user|
         delete("#{@api_url}/users/#{encode(user['login_id'])}", headers)
       end
     end

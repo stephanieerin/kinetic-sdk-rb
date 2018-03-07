@@ -50,7 +50,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def delete_policy_rules(headers=header_basic_auth)
       info("Deleting all policy rules")
-      find_policy_rules(headers).content["policyRules"].each do |policy_rule|
+      (find_policy_rules(headers).content["policyRules"] || []).each do |policy_rule|
         delete_policy_rule({
           "type" => policy_rule['type'],
           "name" => policy_rule['name']
@@ -100,7 +100,7 @@ module KineticSdk
     def export_policy_rules(headers=header_basic_auth)
       raise StandardError.new "An export directory must be defined to export policy rules." if @options[:export_directory].nil?
       response = find_policy_rules({"include" => "consolePolicyRules"}, headers)
-      response.content["policyRules"].each do |policy_rule|
+      (response.content["policyRules"] || []).each do |policy_rule|
         export_policy_rule(policy_rule, headers)
       end
     end
