@@ -467,7 +467,7 @@ end
 #--------------------------------------------------------------------------
 if options.importTask
 
-  task_sdk = KineticSdk::TaskApi::SDK.new(
+  task_sdk = KineticSdk::Task.new(
     app_server_url: task_server,
     username: env["task"]["credentials"]["username"],
     password: env["task"]["credentials"]["password"],
@@ -746,7 +746,7 @@ end
 #--------------------------------------------------------------------------
 if options.configureBH
 
-  bridgehub_sdk = KineticSdk::BridgehubApi::SDK.new({
+  bridgehub_sdk = KineticSdk::Bridgehub.new({
     app_server_url: env["bridgehub"]["server"],
     username: env["bridgehub"]["credentials"]["username"],
     password: env["bridgehub"]["credentials"]["password"],
@@ -810,7 +810,7 @@ end
 if options.configureFH
 
   # Create the Filehub filestore
-  filehub_sdk = KineticSdk::FilehubApi::SDK.new({
+  filehub_sdk = KineticSdk::Filehub.new({
     app_server_url: env["filehub"]["server"],
     username: env["filehub"]["credentials"]["username"],
     password: env["filehub"]["credentials"]["password"],
