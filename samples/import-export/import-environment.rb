@@ -500,7 +500,6 @@ if options.importTask
     "Identity Store" => "com.kineticdata.authentication.kineticcore.KineticCoreIdentityStore",
     "properties" => {
       "Kinetic Core Space Url" => "#{ce_server}",
-      "Group Attribute Name" => "Kinetic Task Groups",
       "Proxy Username (Space Admin)" => ce_integration_username,
       "Proxy Password (Space Admin)" => ce_integration_password
     }
@@ -749,8 +748,7 @@ if options.importTask
   begin
     # Retrieve the existing session configuration
     session_config = task_sdk.find_session_configuration
-    # If this is a new task database
-    if action == "Start" || session_config.content["timeout"] != "43200"
+    if session_config.content["timeout"] != "43200"
       # Update the Task session timeout to 30 days
       task_sdk.update_session_configuration({ "timeout" => "43200" })
     end
