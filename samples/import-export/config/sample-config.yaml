@@ -18,6 +18,9 @@ ce:
     username: "integration.user@example.com"
     display_name: "Integration User"
   task_source_name: "Kinetic Request CE"
+  filestore:
+    type: "Local"
+    directory: "/home/filesDirectory"
 
 # Properties for Kinetic Task
 task:

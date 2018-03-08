@@ -207,7 +207,8 @@ bridge_slug = "ce-#{space_slug}"
 
 # FileHub
 filestore_slug = "ce-#{space_slug}"
-filestore_data_location = "/"
+filestore_data_location = (env['ce'].has_key?('filestore') ?
+    env['ce']['filestore']['directory'] : "") || "/home/filesDirectory"
 
 
 #--------------------------------------------------------------------------
@@ -303,7 +304,7 @@ if options.importCE
       )
     end
 
-    # Create User Attribute Definitions
+    # Create User Profile Attribute Definitions
     userProfileAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/userProfileAttributeDefinitions.json"))
     userProfileAttributeDefinitions.each do |obj|
       requestce_sdk_space.add_user_profile_attribute_definition(
@@ -312,14 +313,6 @@ if options.importCE
         obj["allowsMultiple"]
       )
     end
-
-    # Associate the Space Admin user to the "Kinetic Data" Group.  This will allow
-    # the kdadmin user to be a Kinetic Task administrator.
-    requestce_sdk_space.add_user_attribute(
-      ce_credentials_space_admin["username"],
-      "Kinetic Task Groups",
-      "Kinetic Data"
-    )
 
     # Update the Space with all attributes and properties
     space_json = JSON.parse(File.read("#{request_ce_dir}/space.json"))
@@ -480,6 +473,22 @@ if options.importCE
     requestce_sdk_space.update_bridge("Kinetic Core", {
       "url" => "#{env['bridgehub']['server']}/app/api/v1/bridges/#{bridge_slug}/"
     })
+
+    # Create the oauth client for Kinetic Task
+    task_oauth = {
+      "name" => "Kinetic Task - #{space_slug}",
+      "description" => "OAuth Provider for #{space_slug} Kinetic Task",
+      "clientId" => "kinetic-task",
+      "clientSecret" => oauth_secret_task,
+      "redirectUri" => "#{task_server}/#{space_slug}/#{task_context}/oauth"
+    }
+    if requestce_sdk_space.find_oauth_client(task_oauth['clientId']).status == 404
+      requestce_sdk_space.add_oauth_client(task_oauth)
+    else
+      requestce_sdk_space.update_oauth_client(task_oauth['clientId'], task_oauth)
+    end
+  else
+    puts "The #{space_slug} space already exists, skipping Request CE import."
   end
 end
 
@@ -498,33 +507,24 @@ if options.importTask
     }
   )
 
-  # Update the identity store properties
-  task_sdk.update_identity_store({
-    "Identity Store" => "com.kineticdata.authentication.kineticcore.KineticCoreIdentityStore",
-    "properties" => {
-      "Kinetic Core Space Url" => "#{ce_server}",
-      "Proxy Username (Space Admin)" => ce_integration_username,
-      "Proxy Password (Space Admin)" => ce_integration_password
-    }
-  })
+  import = false
 
-  # Check if the Platform source exists
-  if task_sdk.find_source(platform_task_source_name).code != 200
-    puts "Creating the #{platform_task_source_name} source in the Kinetic Task database."
-    # Create the source
+  # Check if the Request CE source exists
+  ce_source_response = task_sdk.find_source(ce_task_source_name, { "include" => "policyRules" })
+  if (ce_source_response.status == 404 || (ce_source_response.status == 200 && options.import_overwrite))
+    import = true
+  end
+
+  if import
+    puts "Create the global routine source in the Kinetic Task database"
+    # Create the "-" source
     task_sdk.add_source({
-      "name" => platform_task_source_name,
+      "name" => "-",
       "status" => "Active",
       "type" => "Adhoc",
       "policyRules" => []
     })
-  else
-    puts "The #{platform_task_source_name} source already exists in the Kinetic Task database."
-  end
 
-  # Check if the database is already seeded
-  ce_source_response = task_sdk.find_source(ce_task_source_name, { "include" => "policyRules" })
-  if ce_source_response.code != 200
     puts "Create the #{ce_task_source_name} source in the Kinetic Task database"
     # Create the CE Source
     task_sdk.add_source({
@@ -539,224 +539,254 @@ if options.importTask
       },
       "policyRules" => []
     })
-  else
-    # update the source properties
-    ce_source = ce_source_response.content
-    ###
-    # This currently returns a 500 error in the log file due to the
-    # source "validate" method, but it appears everything was updated
-    # correctly, and everything appears to function normally.
-    #
-    # Obviously need to look into why the 500 error is thrown.
-    ###
-    task_sdk.update_source(ce_source, {
-      "name" => ce_task_source_name,
-      "status" => "Active",
-      "type" => "Kinetic Request CE",
+
+    # Check if the Kinetic Task source exists
+    if task_sdk.find_source("Kinetic Task").status == 404
+      puts "Creating the Kinetic Task source in the Kinetic Task database."
+      # Create the source
+      task_sdk.add_source({
+        "name" => "Kinetic Task",
+        "status" => "Active",
+        "type" => "Adhoc",
+        "policyRules" => []
+      })
+    else
+      puts "The Kinetic Task source already exists in the Kinetic Task database."
+    end
+
+
+    # Check if the Platform source exists
+    if task_sdk.find_source(platform_task_source_name).status == 404
+      puts "Creating the #{platform_task_source_name} source in the Kinetic Task database."
+      # Create the source
+      task_sdk.add_source({
+        "name" => platform_task_source_name,
+        "status" => "Active",
+        "type" => "Adhoc",
+        "policyRules" => []
+      })
+    else
+      puts "The #{platform_task_source_name} source already exists in the Kinetic Task database."
+    end
+
+    # Update the identity store properties
+    task_sdk.update_identity_store({
+      "Identity Store" => "com.kineticdata.authentication.kineticcore.KineticCoreIdentityStore",
       "properties" => {
-        "Space Slug" => space_slug,
-        "Web Server" => ce_server,
-        "Proxy Username" => ce_integration_username,
-        "Proxy Password" => ce_integration_password
-      },
-      "policyRules" => ce_source["policyRules"]
+        "Kinetic Core Space Url" => "#{ce_server}",
+        "Proxy Username (Space Admin)" => ce_integration_username,
+        "Proxy Password (Space Admin)" => ce_integration_password
+      }
     })
-  end
 
-  # Locate Task Import Directory
-  taskDir = "#{space_dir}/task"
+    # Update the authentication
+    task_sdk.update_authentication({
+      "authenticator" => "com.kineticdata.core.v1.authenticators.OAuthAuthenticator",
+      "authenticationJsp" => "/WEB-INF/app/login.jsp",
+      "properties" => {
+        "Provider Name" => "Kinops Request CE",
+        "Auto Redirect Login" => "Yes",
+        "Authorize Endpoint" => "#{ce_server}/#{space_slug}/app/oauth/authorize",
+        "Token Endpoint" => "#{ce_server}/#{space_slug}/app/oauth/token",
+        "Check Token Endpoint" => "#{ce_server}/#{space_slug}/app/oauth/check_token?token=",
+        "Logout Redirect Location" => "#{ce_server}/#{space_slug}/app/logout",
+        "Client Id" => "kinetic-task",
+        "Client Secret" => oauth_secret_task,
+        "Redirect URI" => "#{task_server}/#{space_slug}/#{task_context}/oauth",
+        "Scope" => "full_access"
+      }
+    })
 
-  # Import space handlers
-  Dir[taskDir+"/handlers/*"].each do |handler|
-    # skip the smtp email send handler (handled after this loop)
-    next if handler.end_with?("smtp_email_send_v1.zip")
+    # Locate Task Import Directory
+    taskDir = "#{space_dir}/task"
 
-    handler_file = File.new(handler, 'rb')
+    # Import space handlers
+    Dir[taskDir+"/handlers/*"].each do |handler|
+      # skip the smtp email send handler (handled after this loop)
+      next if handler.end_with?("smtp_email_send_v1.zip")
 
-    # try up to 3 times in case of time-outs
-    tries = 3
-    response = nil
-    while tries > 0 do
-      response = task_sdk.import_handler(handler_file, true)
-      break if response.code == 200
-      tries -= 1
-      sleep 2
-    end
+      handler_file = File.new(handler, 'rb')
 
-    # if import was successful, set the handler properties
-    if tries > 0
-      # Update the Request CE Notification Template handler
-      if File.basename(handler_file).start_with?("kinetic_request_ce_notification_template_send_v1")
-        task_sdk.update_handler(File.basename(handler_file, ".zip"), {
-          "properties" => {
-            'smtp_server' => env["notification_template_handler"]["smtp_server"],
-            'smtp_port' => env["notification_template_handler"]["smtp_port"],
-            'smtp_tls' => env["notification_template_handler"]["smtp_tls"],
-            'smtp_username' => env["notification_template_handler"]["smtp_username"],
-            'smtp_password' => env["notification_template_handler"]["smtp_password"],
-            'smtp_from_address' => env["notification_template_handler"]["smtp_from_address"],
-            'api_server' => ce_server,
-            'api_username' => ce_integration_username,
-            'api_password' => ce_integration_password,
-            'space_slug' => space_slug,
-            'enable_debug_logging' => 'Yes'
-          }
-        })
-      # update each Kinetic Request handler - need API to get list of info values?
-      elsif File.basename(handler_file).start_with?("kinetic_request_ce")
-        task_sdk.update_handler(File.basename(handler_file, ".zip"), {
-          "properties" => {
-            "api_server" => ce_server,
-            "api_username" => ce_integration_username,
-            "api_password" => ce_integration_password,
-            "space_slug" => space_slug
-          },
-          "categories" => []
-        })
-      # update each Kinetic Task handler - need API to get list of info values?
-      elsif File.basename(handler_file).start_with?("kinetic_task")
-        task_sdk.update_handler(File.basename(handler_file, ".zip"), {
-          "properties" => {
-            "username" => ce_integration_username,
-            "password" => ce_integration_password,
-            "kinetic_task_location" => "#{task_server}",
-            "enable_debug_logging" => "No"
-          },
-          "categories" => []
-        })
-      # update each Kinetic Response handler - need API to get list of info values?
-      elsif File.basename(handler_file).start_with?("kinetic_response")
-        task_sdk.update_handler(File.basename(handler_file, ".zip"), {
-          "properties" => {
-            "api_username" => ce_integration_username,
-            "api_password" => ce_integration_password,
-            "api_server" => "#{response_server}",
-            "enable_debug_logging" => "false"
-          },
-          "categories" => []
-        })
+      # try up to 3 times in case of time-outs
+      tries = 3
+      response = nil
+      while tries > 0 do
+        response = task_sdk.import_handler(handler_file, true)
+        break if response.status == 200
+        tries -= 1
+        sleep 2
       end
-    end
-  end
 
-  # Update SMTP handler
-  task_sdk.update_handler("smtp_email_send_v1", {
-    "properties" => {
-      "server" => env["smtp"]["server"],
-      "port" => env["smtp"]["port"],
-      "tls" => env["smtp"]["tls"],
-      "username" => env["smtp"]["username"],
-      "password" => env["smtp"]["password"]
-    }
-  })
-
-
-  # Import trees
-  Dir[taskDir+"/trees/**/*"].each do |tree|
-    unless File.directory?(tree)
-      # Get the name of the directory
-      source_name = File.dirname(tree).split("/").last
-      # TODO: Kinetic Task is always included, provide a configurable array of
-      #       source names that are also expected
-      ["Kinetic Task", platform_task_source_name, ce_task_source_name].each do |defined_source_name|
-        # If the tree directory is the slugified version of the source name
-        if source_name == task_sdk.slugify(defined_source_name)
-          # update the source name to be the defined source name
-          source_name = defined_source_name
-          break
+      # if import was successful, set the handler properties
+      if tries > 0
+        # Update the Request CE Notification Template handler
+        if File.basename(handler_file).start_with?("kinetic_request_ce_notification_template_send_v1")
+          task_sdk.update_handler(File.basename(handler_file, ".zip"), {
+            "properties" => {
+              'smtp_server' => env["notification_template_handler"]["smtp_server"],
+              'smtp_port' => env["notification_template_handler"]["smtp_port"],
+              'smtp_tls' => env["notification_template_handler"]["smtp_tls"],
+              'smtp_username' => env["notification_template_handler"]["smtp_username"],
+              'smtp_password' => env["notification_template_handler"]["smtp_password"],
+              'smtp_from_address' => env["notification_template_handler"]["smtp_from_address"],
+              'api_server' => ce_server,
+              'api_username' => ce_integration_username,
+              'api_password' => ce_integration_password,
+              'space_slug' => space_slug,
+              'enable_debug_logging' => 'Yes'
+            }
+          })
+        # update each Kinetic Request handler - need API to get list of info values?
+        elsif File.basename(handler_file).start_with?("kinetic_request_ce")
+          task_sdk.update_handler(File.basename(handler_file, ".zip"), {
+            "properties" => {
+              "api_server" => ce_server,
+              "api_username" => ce_integration_username,
+              "api_password" => ce_integration_password,
+              "space_slug" => space_slug
+            },
+            "categories" => []
+          })
+        # update each Kinetic Task handler - need API to get list of info values?
+        elsif File.basename(handler_file).start_with?("kinetic_task")
+          task_sdk.update_handler(File.basename(handler_file, ".zip"), {
+            "properties" => {
+              "username" => ce_integration_username,
+              "password" => ce_integration_password,
+              "kinetic_task_location" => "#{task_server}",
+              "enable_debug_logging" => "No"
+            },
+            "categories" => []
+          })
         end
       end
-      # fix up the source name in the tree, otherwise the import will fail
-      content = File.read(tree).sub(
-        /<sourceName>(.*)<\/sourceName>/,
-        "<sourceName>#{source_name}</sourceName>"
-      )
-      # save the file
-      File.write(tree, content)
-      # import the file
-      task_sdk.import_tree(File.new(tree, 'rb'), true)
     end
-  end
 
-  # Import routines
-  Dir[taskDir+"/routines/*"].each do |routine|
-    unless File.directory?(routine)
-      task_sdk.import_routine(File.new(routine, 'rb'), true)
+    # Update SMTP handler
+    task_sdk.update_handler("smtp_email_send_v1", {
+      "properties" => {
+        "server" => env["smtp"]["server"],
+        "port" => env["smtp"]["port"],
+        "tls" => env["smtp"]["tls"],
+        "username" => env["smtp"]["username"],
+        "password" => env["smtp"]["password"]
+      }
+    })
+
+
+    # Import trees
+    Dir[taskDir+"/trees/**/*"].each do |tree|
+      unless File.directory?(tree)
+        # Get the name of the directory
+        source_name = File.dirname(tree).split("/").last
+        # TODO: Kinetic Task is always included, provide a configurable array of
+        #       source names that are also expected
+        ["Kinetic Task", platform_task_source_name, ce_task_source_name].each do |defined_source_name|
+          # If the tree directory is the slugified version of the source name
+          slugified_source_name = task_sdk.slugify(defined_source_name)
+          if (source_name == slugified_source_name || source_name == slugified_source_name.gsub("-", ""))
+            # update the source name to be the defined source name
+            source_name = defined_source_name
+            break
+          end
+        end
+        # fix up the source name in the tree, otherwise the import will fail
+        content = File.read(tree).sub(
+          /<sourceName>(.*)<\/sourceName>/,
+          "<sourceName>#{source_name}</sourceName>"
+        )
+        # save the file
+        File.write(tree, content)
+        # import the file
+        task_sdk.import_tree(File.new(tree, 'rb'), true)
+      end
     end
-  end
 
-  # Create Groups
-  Dir[taskDir+"/groups/*"].each do |file|
-    group = JSON.parse(File.read(file))
-    task_sdk.add_group(group['name']) if task_sdk.find_group(group['name']).code != 200
-  end
+    # Import routines
+    Dir[taskDir+"/routines/*"].each do |routine|
+      unless File.directory?(routine)
+        task_sdk.import_routine(File.new(routine, 'rb'), true)
+      end
+    end
 
-  # Create Policy Rules
-  Dir[taskDir+"/policyRules/*"].each do |file|
-    policy_rule = JSON.parse(File.read(file))
-    if task_sdk.find_policy_rule(policy_rule).code != 200
-      # create the policy rule
-      task_sdk.add_policy_rule(policy_rule)
+    # Create Groups
+    Dir[taskDir+"/groups/*"].each do |file|
+      group = JSON.parse(File.read(file))
+      task_sdk.add_group(group['name']) if task_sdk.find_group(group['name']).status == 404
+    end
+
+    # Create Policy Rules
+    Dir[taskDir+"/policyRules/*"].each do |file|
+      policy_rule = JSON.parse(File.read(file))
+      if task_sdk.find_policy_rule(policy_rule).status == 404
+        # create the policy rule
+        task_sdk.add_policy_rule(policy_rule)
+      else
+        # update the policy rule
+        task_sdk.update_policy_rule(policy_rule, policy_rule)
+      end
+    end
+
+    # Set the default policy rule
+    task_sdk.update_system_policy_rule("Allow All")
+
+    # Create Categories
+    Dir[taskDir+"/categories/*"].each do |file|
+      category = JSON.parse(File.read(file))
+      if task_sdk.find_category(category['name']).status == 404
+        # create the category
+        task_sdk.add_category(category)
+      else
+        # update the category with the handlers, trees, and policy rules
+        task_sdk.update_category(category['name'], category)
+      end
+    end
+
+
+    # Clean up the sample data
+    task_sdk.delete_group("Administrators")
+    task_sdk.delete_group("Managers")
+    task_sdk.delete_user("Adam Administrator")
+    task_sdk.delete_user("Mary Manager")
+    task_sdk.delete_policy_rule({ "type"=>"Console Access", "name"=>"Member of Administrators" })
+    task_sdk.delete_policy_rule({ "type"=>"Console Access", "name"=>"Member of Administrators or Managers" })
+
+    # Create or update the API access key
+    if task_sdk.find_access_key(task_access_key['identifier']).status == 404
+      task_sdk.add_access_key(task_access_key)
     else
-      # update the policy rule
-      task_sdk.update_policy_rule(policy_rule, policy_rule)
+      task_sdk.update_access_key(task_access_key['identifier'], task_access_key)
     end
-  end
 
-  # Create Categories
-  Dir[taskDir+"/categories/*"].each do |file|
-    category = JSON.parse(File.read(file))
-    if task_sdk.find_category(category['name']).code != 200
-      # create the category
-      task_sdk.add_category(category)
-    else
-      # update the category with the handlers, trees, and policy rules
-      task_sdk.update_category(category['name'], category)
+    # Create or update the API - Valid Signature policy rule
+    if task_sdk.find_policy_rule({ "type" => "API Access", "name" => "Valid Signature" }).status == 404
+      task_sdk.add_policy_rule(signature_policy_rule)
     end
-  end
+    # Add the Valid Signature policy rule to the Request CE source
+    task_sdk.add_policy_rule_to_source(
+      signature_policy_rule['type'], signature_policy_rule['name'], ce_task_source_name
+    )
 
+    # Update engine properties
+    task_sdk.update_engine({
+      "Max Threads" => "1",
+      "Sleep Delay" => "1",
+      "Trigger Query" => "'Selection Criterion'=null"
+    })
 
-  # Clean up the sample data
-  task_sdk.delete_group("Administrators")
-  task_sdk.delete_group("Managers")
-  task_sdk.delete_user("Adam Administrator")
-  task_sdk.delete_user("Mary Manager")
-  task_sdk.delete_policy_rule({ "type"=>"Console Access", "name"=>"Member of Administrators" })
-  task_sdk.delete_policy_rule({ "type"=>"Console Access", "name"=>"Member of Administrators or Managers" })
-
-  # Create or update the API access key
-  if task_sdk.find_access_key(task_access_key['identifier']).code != 200
-    task_sdk.add_access_key(task_access_key)
+    # Update the session configuration for new installations, or upgrades from pre 4.1
+    begin
+      # Retrieve the existing session configuration
+      session_config = task_sdk.find_session_configuration
+      if session_config.content["timeout"] != "43200"
+        # Update the Task session timeout to 30 days
+        task_sdk.update_session_configuration({ "timeout" => "43200" })
+      end
+    rescue
+      puts "Unsupported, ability to configure session timeout was added in Task 4.1.0"
+    end
   else
-    task_sdk.update_access_key(task_access_key['identifier'], task_access_key)
-  end
-
-  # Create or update the API - Valid Signature policy rule
-  if task_sdk.find_policy_rule({ "type" => "API Access", "name" => "Valid Signature" }).code != 200
-    task_sdk.add_policy_rule(signature_policy_rule)
-  end
-  # Add the Valid Signature policy rule to the Request CE source
-  task_sdk.add_policy_rule_to_source(
-    signature_policy_rule['type'], signature_policy_rule['name'], ce_task_source_name
-  )
-
-  # Update engine properties
-  task_sdk.update_engine({
-    "Max Threads" => "1",
-    "Sleep Delay" => "1",
-    "Trigger Query" => "'Selection Criterion'=null"
-  })
-
-  # Update the session configuration for new installations, or upgrades from pre 4.1
-  begin
-    # Retrieve the existing session configuration
-    session_config = task_sdk.find_session_configuration
-    if session_config.content["timeout"] != "43200"
-      # Update the Task session timeout to 30 days
-      task_sdk.update_session_configuration({ "timeout" => "43200" })
-    end
-  rescue
-    puts "Unsupported, ability to configure session timeout was added in Task 4.1.0"
+    puts "The #{ce_task_source_name} source already exists, skipping Task import."
   end
 end
 
@@ -772,53 +802,65 @@ if options.configureBH
     options: { log_level: log_level }
   })
 
-  # Log into the Space with the kdadmin user
-  requestce_sdk_space = KineticSdk::RequestCe.new({
-    app_server_url: ce_server,
-    space_slug: space_slug,
-    username: ce_credentials_space_admin["username"],
-    password: ce_credentials_space_admin["password"],
-    options: { log_level: log_level }
-  })
+  import = false
 
-  if bridgehub_sdk.find_bridge(bridge_slug).code != 200
-    bridgehub_sdk.add_bridge({
-      "adapterClass" => "com.kineticdata.bridgehub.adapter.kineticcore.KineticCoreAdapter",
-      "name" => "CE - #{space_name}",
-      "slug" => bridge_slug,
-      "ipAddresses" => "*",
-      "useAccessKeys" => "true",
-      "properties" => {
-        "Username" => ce_integration_username,
-        "Password" => ce_integration_password,
-        "Kinetic Core Space Url" => "#{ce_server}/#{space_slug}"
-      }
+  # Check if the Bridge already exists
+  bridge_response = bridgehub_sdk.find_bridge(bridge_slug)
+  if (bridge_response.status == 404 || (bridge_response.status == 200 && options.import_overwrite))
+    import = true
+  end
+
+  if import
+    if bridge_response.status == 404
+      bridgehub_sdk.add_bridge({
+        "adapterClass" => "com.kineticdata.bridgehub.adapter.kineticcore.KineticCoreAdapter",
+        "name" => "CE - #{space_name}",
+        "slug" => bridge_slug,
+        "ipAddresses" => "*",
+        "useAccessKeys" => "true",
+        "properties" => {
+          "Username" => ce_integration_username,
+          "Password" => ce_integration_password,
+          "Kinetic Core Space Url" => "#{ce_server}/#{space_slug}"
+        }
+      })
+    else
+      bridgehub_sdk.update_bridge(bridge_slug, {
+        "properties" => {
+          "Username" => ce_integration_username,
+          "Password" => ce_integration_password,
+          "Kinetic Core Space Url" => "#{ce_server}/#{space_slug}"
+        }
+      })
+    end
+
+    # Delete all Bridge access keys and create a new one
+    (bridgehub_sdk.find_access_keys(bridge_slug).content["accessKeys"] || []).each do |access_key|
+      bridgehub_sdk.delete_access_key(bridge_slug, access_key["id"])
+    end
+
+    # Create a new bridge access key
+    bridge_access_key = bridgehub_sdk.add_access_key(bridge_slug, {
+      "description" => "Kinetic Request CE space #{space_name} (#{space_slug})"
+    }).content["accessKey"]
+
+    # Log into the Space with the kdadmin user
+    requestce_sdk_space = KineticSdk::RequestCe.new({
+      app_server_url: ce_server,
+      space_slug: space_slug,
+      username: ce_credentials_space_admin["username"],
+      password: ce_credentials_space_admin["password"],
+      options: { log_level: log_level }
+    })
+
+    # Update Request CE with the Bridge Access Key information
+    requestce_sdk_space.update_bridge("Kinetic Core", {
+      "key" => bridge_access_key["id"],
+      "secret" => bridge_access_key["secret"]
     })
   else
-    bridgehub_sdk.update_bridge(bridge_slug, {
-      "properties" => {
-        "Username" => ce_integration_username,
-        "Password" => ce_integration_password,
-        "Kinetic Core Space Url" => "#{ce_server}/#{space_slug}"
-      }
-    })
+    puts "The #{bridge_slug} bridge already exists, skipping BridgeHub import."
   end
-
-  # Delete all Bridge access keys and create a new one
-  (bridgehub_sdk.find_access_keys(bridge_slug).content["accessKeys"] || []).each do |access_key|
-    bridgehub_sdk.delete_access_key(bridge_slug, access_key["id"])
-  end
-
-  # Create a new bridge access key
-  bridge_access_key = bridgehub_sdk.add_access_key(bridge_slug, {
-    "description" => "Kinetic Request CE space #{space_name} (#{space_slug})"
-  }).content["accessKey"]
-
-  # Update Request CE with the Bridge Access Key information
-  requestce_sdk_space.update_bridge("Kinetic Core", {
-    "key" => bridge_access_key["id"],
-    "secret" => bridge_access_key["secret"]
-  })
 
 end
 
@@ -836,49 +878,61 @@ if options.configureFH
     options: { log_level: log_level }
   })
 
-  # Log into the Space with the kdadmin user
-  requestce_sdk_space = KineticSdk::RequestCe.new({
-    app_server_url: ce_server,
-    space_slug: space_slug,
-    username: ce_credentials_space_admin["username"],
-    password: ce_credentials_space_admin["password"],
-    options: { log_level: log_level }
-  })
+  import = false
 
-  if filehub_sdk.find_filestore(filestore_slug).code != 200
-    filehub_sdk.add_filestore({
-      "adapterClass" => "com.kineticdata.filehub.adapters.local.LocalFilestoreAdapter",
-      "name" => "CE - #{space_name}",
-      "slug" => filestore_slug,
-      "properties" => {
-        "Directory" => filestore_data_location
+  # Check if the Filestore already exists
+  filestore_response = filehub_sdk.find_filestore(filestore_slug)
+  if (filestore_response.status == 404 || (filestore_response.status == 200 && options.import_overwrite))
+    import = true
+  end
+
+  if import
+    if filestore_response.status == 404
+      filehub_sdk.add_filestore({
+        "adapterClass" => "com.kineticdata.filehub.adapters.local.LocalFilestoreAdapter",
+        "name" => "CE - #{space_name}",
+        "slug" => filestore_slug,
+        "properties" => {
+          "Directory" => filestore_data_location
+        }
+      })
+    else
+      filehub_sdk.update_filestore(filestore_slug, {
+        "properties" => {
+          "Directory" => filestore_data_location
+        }
+      })
+    end
+
+    # Delete all Filestore access keys and create a new one
+    (filehub_sdk.find_access_keys(filestore_slug).content["accessKeys"] || []).each do |access_key|
+      filehub_sdk.delete_access_key(filestore_slug, access_key["id"])
+    end
+
+    # Create a new filestore access key
+    filestore_access_key = filehub_sdk.add_access_key(filestore_slug, {
+      "description" => "Kinetic Request CE space #{space_name} (#{space_slug})"
+    }).content["accessKey"]
+
+    # Log into the Space with the kdadmin user
+    requestce_sdk_space = KineticSdk::RequestCe.new({
+      app_server_url: ce_server,
+      space_slug: space_slug,
+      username: ce_credentials_space_admin["username"],
+      password: ce_credentials_space_admin["password"],
+      options: { log_level: log_level }
+    })
+
+    # Update Request CE with the Filehub information
+    requestce_sdk_space.update_space({
+      "filestore" => {
+        "filehubUrl" => env["filehub"]["server"],
+        "key" => filestore_access_key["id"],
+        "secret" => filestore_access_key["secret"],
+        "slug" => filestore_slug
       }
     })
   else
-    filehub_sdk.update_filestore(filestore_slug, {
-      "properties" => {
-        "Directory" => filestore_data_location
-      }
-    })
+    puts "The #{filestore_slug} filestore already exists, skipping FileHub import."
   end
-
-  # Delete all Filestore access keys and create a new one
-  (filehub_sdk.find_access_keys(filestore_slug).content["accessKeys"] || []).each do |access_key|
-    filehub_sdk.delete_access_key(filestore_slug, access_key["id"])
-  end
-
-  # Create a new filestore access key
-  filestore_access_key = filehub_sdk.add_access_key(filestore_slug, {
-    "description" => "Kinetic Request CE space #{space_name} (#{space_slug})"
-  }).content["accessKey"]
-
-  # Update Request CE with the Filehub information
-  requestce_sdk_space.update_space({
-    "filestore" => {
-      "filehubUrl" => env["filehub"]["server"],
-      "key" => filestore_access_key["id"],
-      "secret" => filestore_access_key["secret"],
-      "slug" => filestore_slug
-    }
-  })
 end

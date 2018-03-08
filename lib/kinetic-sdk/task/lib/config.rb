@@ -172,5 +172,31 @@ module KineticSdk
       put("#{@api_url}/config/session", settings, headers)
     end
 
+    # Find the system policy rule
+    #
+    # @param params [Hash] Query parameters that are added to the URL, such as +include+
+    # @param headers [Hash] hash of headers to send, default is basic authentication
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def find_system_policy_rule(params={}, headers=header_basic_auth)
+      info("Finding the system policy rule")
+      get("#{@api_url}/config/systemPolicyRule", params, headers)
+    end
+
+    # Update the system policy rule
+    #
+    # @param policy_rule_name [String] name of the policy rule to use
+    # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    #
+    # Example
+    #
+    #     update_system_policy_rule("Allow All")
+    #
+    def update_system_policy_rule(policy_rule_name, headers=default_headers)
+      info("Updating the system policy rule")
+      payload = { "name" => policy_rule_name }
+      put("#{@api_url}/config/systemPolicyRule", payload, headers)
+    end
+
   end
 end

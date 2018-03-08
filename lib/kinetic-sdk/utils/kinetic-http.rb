@@ -428,10 +428,13 @@ module KineticSdk
               # will raise an exception if content_string is not valid json
               JSON.parse(@content_string)
             else
-              nil
+              {}
             end
         when StandardError then
           @code = "0"
+          @content = {}
+          @content_string = nil
+          @content_type = nil
           @backtrace = object.backtrace
           @exception = object.exception
           @message = object.message

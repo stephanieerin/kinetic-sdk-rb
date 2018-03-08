@@ -19,9 +19,8 @@ module KineticSdk
     #     })
     #
     def add_policy_rule(policy, headers=default_headers)
-      type = policy.delete("#{@api_url}type")
-      info("Adding policy rule \"#{type} - #{policy['name']}\"")
-      post("#{@api_url}/policyRules/#{encode(type)}", policy, headers)
+      info("Adding policy rule \"#{policy['type']} - #{policy['name']}\"")
+      post("#{@api_url}/policyRules/#{encode(policy['type'])}", policy, headers)
     end
 
     # Delete a Policy Rule.
