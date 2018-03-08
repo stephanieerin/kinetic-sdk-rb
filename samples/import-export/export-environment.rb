@@ -125,6 +125,8 @@ rescue
   exit
 end
 
+log_level = env["sdk_log_level"]
+
 # Build and move to the Export Directory for this space
 space_dir = "#{pwd}/exports/#{space_slug}"
 FileUtils.mkdir_p(space_dir, :mode => 0700) unless Dir.exist?(space_dir)
@@ -154,7 +156,7 @@ if options.exportCE
     app_server_url: ce_server,
     username: ce_credentials["username"],
     password: ce_credentials["password"],
-    options: { "log_level" => env["log_level"] }
+    options: { log_level: log_level }
   })
 
   # flag to indicate the space needs to be updated instead of created
@@ -181,7 +183,7 @@ if options.exportCE
       space_slug: space_slug,
       username: ce_credentials_space_admin["username"],
       password: ce_credentials_space_admin["password"],
-      options: { "log_level" => env["log_level"] }
+      options: { log_level: log_level }
     })
 
     # Export Space - Returns the entire Space definition including all kapps
@@ -356,7 +358,7 @@ if options.exportTask
     password: env["task"]["credentials"]["password"],
     options: {
       export_directory: "#{space_dir}/task",
-      log_level: env["log_level"]
+      log_level: log_level
     }
   )
 

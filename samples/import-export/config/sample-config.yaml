@@ -1,3 +1,6 @@
+# SDK log level (off | info | debug | trace)
+sdk_log_level: "info"
+
 # Properties for the Platform
 platform:
   task_source_name: "Platform"
@@ -36,9 +39,6 @@ filehub:
   credentials:
     username: "admin"
     password: "admin"
-
-# log level (info | debug)
-log_level: "info"
 
 # Kinetic Data SMTP Info (Set on SMTP Handler)
 smtp:

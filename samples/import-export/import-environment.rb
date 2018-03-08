@@ -166,6 +166,9 @@ Dir.chdir(space_dir)
 # Platform
 platform_task_source_name = env["platform"]["task_source_name"]
 
+# SDK Logging
+log_level = env['sdk_log_level']
+
 # Request CE
 ce_server = env["ce"]["server"]
 ce_task_source_name = env["ce"]["task_source_name"]
@@ -216,7 +219,7 @@ if options.importCE
     app_server_url: ce_server,
     username: ce_credentials["username"],
     password: ce_credentials["password"],
-    options: { "log_level" => env["log_level"] }
+    options: { log_level: log_level }
   })
 
   # Check if the space exists
@@ -264,7 +267,7 @@ if options.importCE
       space_slug: space_slug,
       username: ce_credentials_space_admin["username"],
       password: ce_credentials_space_admin["password"],
-      options: { "log_level" => env["log_level"] }
+      options: { log_level: log_level }
     })
 
     # Locate Space Import Directory
@@ -491,7 +494,7 @@ if options.importTask
     password: env["task"]["credentials"]["password"],
     options: {
       export_directory: "#{space_dir}/task",
-      log_level: env["log_level"]
+      log_level: log_level
     }
   )
 
@@ -766,7 +769,7 @@ if options.configureBH
     app_server_url: env["bridgehub"]["server"],
     username: env["bridgehub"]["credentials"]["username"],
     password: env["bridgehub"]["credentials"]["password"],
-    options: { "log_level" => env["log_level"] }
+    options: { log_level: log_level }
   })
 
   # Log into the Space with the kdadmin user
@@ -775,7 +778,7 @@ if options.configureBH
     space_slug: space_slug,
     username: ce_credentials_space_admin["username"],
     password: ce_credentials_space_admin["password"],
-    options: { "log_level" => env["log_level"] }
+    options: { log_level: log_level }
   })
 
   if bridgehub_sdk.find_bridge(bridge_slug).code != 200
@@ -830,7 +833,7 @@ if options.configureFH
     app_server_url: env["filehub"]["server"],
     username: env["filehub"]["credentials"]["username"],
     password: env["filehub"]["credentials"]["password"],
-    options: { "log_level" => env["log_level"] }
+    options: { log_level: log_level }
   })
 
   # Log into the Space with the kdadmin user
@@ -839,7 +842,7 @@ if options.configureFH
     space_slug: space_slug,
     username: ce_credentials_space_admin["username"],
     password: ce_credentials_space_admin["password"],
-    options: { "log_level" => env["log_level"] }
+    options: { log_level: log_level }
   })
 
   if filehub_sdk.find_filestore(filestore_slug).code != 200
