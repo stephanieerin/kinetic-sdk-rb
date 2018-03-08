@@ -480,7 +480,7 @@ if options.importCE
       "description" => "OAuth Provider for #{space_slug} Kinetic Task",
       "clientId" => "kinetic-task",
       "clientSecret" => oauth_secret_task,
-      "redirectUri" => "#{task_server}/#{space_slug}/#{task_context}/oauth"
+      "redirectUri" => "#{task_server}/#{space_slug}/kinetic-task/oauth"
     }
     if requestce_sdk_space.find_oauth_client(task_oauth['clientId']).status == 404
       requestce_sdk_space.add_oauth_client(task_oauth)
@@ -592,7 +592,7 @@ if options.importTask
         "Logout Redirect Location" => "#{ce_server}/#{space_slug}/app/logout",
         "Client Id" => "kinetic-task",
         "Client Secret" => oauth_secret_task,
-        "Redirect URI" => "#{task_server}/#{space_slug}/#{task_context}/oauth",
+        "Redirect URI" => "#{task_server}/#{space_slug}/kinetic-task/oauth",
         "Scope" => "full_access"
       }
     })
