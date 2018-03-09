@@ -167,7 +167,7 @@ Dir.chdir(space_dir)
 platform_task_source_name = env["platform"]["task_source_name"]
 
 # SDK Logging
-log_level = env['sdk_log_level']
+log_level = env['sdk_log_level'] || ENV['SDK_LOG_LEVEL'] || "info"
 
 # Request CE
 ce_server = env["ce"]["server"]
@@ -203,9 +203,11 @@ signature_policy_rule = {
 }
 
 # BridgeHub
+bridgehub_server = env['bridgehub']['server']
 bridge_slug = "ce-#{space_slug}"
 
 # FileHub
+filehub_server = env['filehub']['server']
 filestore_slug = "ce-#{space_slug}"
 filestore_data_location = (env['ce'].has_key?('filestore') ?
     env['ce']['filestore']['directory'] : "") || "/home/filesDirectory"
@@ -319,6 +321,11 @@ if options.importCE
     # Remove the space slug and space name (slug/name from the template)
     space_json.delete("slug")
     space_json.delete("name")
+    # Update the filestore settings
+    if space_json.has_key?('filestore')
+      space_json['filestore']['slug'] = filestore_slug
+      space_json['filestore']['filehubUrl'] = filehub_server
+    end
     requestce_sdk_space.update_space(space_json)
     # Set Company Name Attribute on Space
     requestce_sdk_space.add_space_attribute("Company Name", "#{space_name}")
@@ -471,7 +478,7 @@ if options.importCE
 
     # Update Bridge on Request CE with the bridgehub slug value.
     requestce_sdk_space.update_bridge("Kinetic Core", {
-      "url" => "#{env['bridgehub']['server']}/app/api/v1/bridges/#{bridge_slug}/"
+      "url" => "#{bridgehub_server}/app/api/v1/bridges/#{bridge_slug}/"
     })
 
     # Create the oauth client for Kinetic Task
@@ -516,15 +523,6 @@ if options.importTask
   end
 
   if import
-    puts "Create the global routine source in the Kinetic Task database"
-    # Create the "-" source
-    task_sdk.add_source({
-      "name" => "-",
-      "status" => "Active",
-      "type" => "Adhoc",
-      "policyRules" => []
-    })
-
     puts "Create the #{ce_task_source_name} source in the Kinetic Task database"
     # Create the CE Source
     task_sdk.add_source({
@@ -554,6 +552,18 @@ if options.importTask
       puts "The Kinetic Task source already exists in the Kinetic Task database."
     end
 
+    if task_sdk.find_source("-").status == 404
+      puts "Create the global routine \"-\" source in the Kinetic Task database"
+      # Create the "-" source
+      task_sdk.add_source({
+        "name" => "-",
+        "status" => "Active",
+        "type" => "Adhoc",
+        "policyRules" => []
+      })
+    else
+      puts "The global routine \"-\" source already exists in the Kinetic Task database."
+    end
 
     # Check if the Platform source exists
     if task_sdk.find_source(platform_task_source_name).status == 404
@@ -926,7 +936,7 @@ if options.configureFH
     # Update Request CE with the Filehub information
     requestce_sdk_space.update_space({
       "filestore" => {
-        "filehubUrl" => env["filehub"]["server"],
+        "filehubUrl" => filehub_server,
         "key" => filestore_access_key["id"],
         "secret" => filestore_access_key["secret"],
         "slug" => filestore_slug
