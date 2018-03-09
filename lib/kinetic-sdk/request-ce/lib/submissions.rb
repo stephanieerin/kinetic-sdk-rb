@@ -96,9 +96,9 @@ module KineticSdk
         params['pageToken'] = response.content["nextPageToken"]
         response = find_form_submissions(kapp_slug, form_slug, params, headers)
         # concat the messages
-        messages.concat(response.content["messages"])
+        messages.concat(response.content["messages"] || [])
         # concat the submissions
-        submissions.concat(response.content["submissions"])
+        submissions.concat(response.content["submissions"] || [])
       end
       final_content = { "messages" => messages, "submissions" => submissions, "nextPageToken" => nil }
       # Return the results

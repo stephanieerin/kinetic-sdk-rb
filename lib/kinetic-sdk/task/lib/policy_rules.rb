@@ -115,7 +115,7 @@ module KineticSdk
       response = nil
       ["API Access", "Category Access", "Console Access", "System Default"].each do |type|
         response = get("#{@api_url}/policyRules/#{encode(type)}", params, headers)
-        policy_rules.concat(response.content["policyRules"])
+        policy_rules.concat(response.content["policyRules"] || [])
       end
       final_content = { "policyRules" => policy_rules }
       response.content= final_content
