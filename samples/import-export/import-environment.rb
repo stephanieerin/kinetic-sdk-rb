@@ -493,7 +493,7 @@ if options.importCE
       "description" => "OAuth Provider for #{space_slug} Kinetic Task",
       "clientId" => "kinetic-task",
       "clientSecret" => oauth_secret_task,
-      "redirectUri" => "#{task_server}/#{space_slug}/kinetic-task/oauth"
+      "redirectUri" => "#{task_server}/kinetic-task/oauth"
     }
     if requestce_sdk_space.find_oauth_client(task_oauth['clientId']).status == 404
       requestce_sdk_space.add_oauth_client(task_oauth)
