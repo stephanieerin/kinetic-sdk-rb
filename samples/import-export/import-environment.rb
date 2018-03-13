@@ -164,7 +164,7 @@ FileUtils.mkdir_p(space_dir, :mode => 0700) unless Dir.exist?(space_dir)
 Dir.chdir(space_dir)
 
 # Platform
-platform_task_source_name = env["platform"]["task_source_name"]
+platform_task_source_name = env.has_key?("platform") ? env["platform"]["task_source_name"] : nil
 
 # SDK Logging
 log_level = env['sdk_log_level'] || ENV['SDK_LOG_LEVEL'] || "info"
@@ -189,6 +189,12 @@ ce_credentials_space_admin = {
 # Task
 task_server = env["task"]["server"]
 oauth_secret_task = KineticSdk::Utils::Random.simple
+task_oauth_server = (env["task"].has_key?("oauth") && env["task"]["oauth"]["endpoint_server"]) ?
+  env["task"]["oauth"]["endpoint_server"] :
+  ce_server
+task_oauth_redirect_server = (env["task"].has_key?("oauth") && env["task"]["oauth"]["redirect_endpoint_server"]) ?
+  env["task"]["oauth"]["redirect_endpoint_server"] :
+  "#{task_server}"
 task_access_key = {
   "description" => "Request CE",
   "identifier" => "request-ce",
@@ -566,17 +572,19 @@ if options.importTask
     end
 
     # Check if the Platform source exists
-    if task_sdk.find_source(platform_task_source_name).status == 404
-      puts "Creating the #{platform_task_source_name} source in the Kinetic Task database."
-      # Create the source
-      task_sdk.add_source({
-        "name" => platform_task_source_name,
-        "status" => "Active",
-        "type" => "Adhoc",
-        "policyRules" => []
-      })
-    else
-      puts "The #{platform_task_source_name} source already exists in the Kinetic Task database."
+    if platform_task_source_name.to_s.size > 0
+      if task_sdk.find_source(platform_task_source_name).status == 404
+        puts "Creating the #{platform_task_source_name} source in the Kinetic Task database."
+        # Create the source
+        task_sdk.add_source({
+          "name" => platform_task_source_name,
+          "status" => "Active",
+          "type" => "Adhoc",
+          "policyRules" => []
+        })
+      else
+        puts "The #{platform_task_source_name} source already exists in the Kinetic Task database."
+      end
     end
 
     # Update the identity store properties
@@ -596,13 +604,13 @@ if options.importTask
       "properties" => {
         "Provider Name" => "Kinops Request CE",
         "Auto Redirect Login" => "Yes",
-        "Authorize Endpoint" => "#{ce_server}/#{space_slug}/app/oauth/authorize",
+        "Authorize Endpoint" => "#{task_oauth_server}/#{space_slug}/app/oauth/authorize",
         "Token Endpoint" => "#{ce_server}/#{space_slug}/app/oauth/token",
         "Check Token Endpoint" => "#{ce_server}/#{space_slug}/app/oauth/check_token?token=",
-        "Logout Redirect Location" => "#{ce_server}/#{space_slug}/app/logout",
+        "Logout Redirect Location" => "#{task_oauth_server}/#{space_slug}/app/logout",
         "Client Id" => "kinetic-task",
         "Client Secret" => oauth_secret_task,
-        "Redirect URI" => "#{task_server}/#{space_slug}/kinetic-task/oauth",
+        "Redirect URI" => "#{task_oauth_redirect_server}/oauth",
         "Scope" => "full_access"
       }
     })
@@ -691,7 +699,9 @@ if options.importTask
         source_name = File.dirname(tree).split("/").last
         # TODO: Kinetic Task is always included, provide a configurable array of
         #       source names that are also expected
-        ["Kinetic Task", platform_task_source_name, ce_task_source_name].each do |defined_source_name|
+        valid_sources = [ "Kinetic Task", ce_task_source_name ]
+        valid_sources << platform_task_source_name if platform_task_source_name.to_s.size > 0
+        valid_sources.each do |defined_source_name|
           # If the tree directory is the slugified version of the source name
           slugified_source_name = task_sdk.slugify(defined_source_name)
           if (source_name == slugified_source_name || source_name == slugified_source_name.gsub("-", ""))
