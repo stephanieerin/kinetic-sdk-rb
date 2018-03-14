@@ -125,7 +125,7 @@ rescue
   exit
 end
 
-log_level = env['sdk_log_level'] || ENV['SDK_LOG_LEVEL'] || "info"
+log_level = ENV['SDK_LOG_LEVEL'] || env['sdk_log_level'] || "info"
 
 # Build and move to the Export Directory for this space
 space_dir = "#{pwd}/exports/#{space_slug}"

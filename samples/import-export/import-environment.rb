@@ -167,7 +167,7 @@ Dir.chdir(space_dir)
 platform_task_source_name = env.has_key?("platform") ? env["platform"]["task_source_name"] : nil
 
 # SDK Logging
-log_level = env['sdk_log_level'] || ENV['SDK_LOG_LEVEL'] || "info"
+log_level = ENV['SDK_LOG_LEVEL'] || env['sdk_log_level'] || "info"
 
 # Request CE
 ce_server = env["ce"]["server"]
@@ -188,18 +188,18 @@ ce_credentials_space_admin = {
 
 # Task
 task_server = env["task"]["server"]
-oauth_secret_task = KineticSdk::Utils::Random.simple
 task_oauth_server = (env["task"].has_key?("oauth") && env["task"]["oauth"]["endpoint_server"]) ?
   env["task"]["oauth"]["endpoint_server"] :
   ce_server
 task_oauth_redirect_server = (env["task"].has_key?("oauth") && env["task"]["oauth"]["redirect_endpoint_server"]) ?
   env["task"]["oauth"]["redirect_endpoint_server"] :
-  "#{task_server}"
+  task_server
 task_access_key = {
   "description" => "Request CE",
   "identifier" => "request-ce",
   "secret" => KineticSdk::Utils::Random.simple
 }
+oauth_secret_task = KineticSdk::Utils::Random.simple
 signature_policy_rule = {
   "name" => "Valid Signature",
   "type" => "API Access",
@@ -493,7 +493,7 @@ if options.importCE
       "description" => "OAuth Provider for #{space_slug} Kinetic Task",
       "clientId" => "kinetic-task",
       "clientSecret" => oauth_secret_task,
-      "redirectUri" => "#{task_server}/kinetic-task/oauth"
+      "redirectUri" => "#{task_oauth_redirect_server}/oauth"
     }
     if requestce_sdk_space.find_oauth_client(task_oauth['clientId']).status == 404
       requestce_sdk_space.add_oauth_client(task_oauth)
@@ -591,7 +591,7 @@ if options.importTask
     task_sdk.update_identity_store({
       "Identity Store" => "com.kineticdata.authentication.kineticcore.KineticCoreIdentityStore",
       "properties" => {
-        "Kinetic Core Space Url" => "#{ce_server}",
+        "Kinetic Core Space Url" => "#{ce_server}/#{space_slug}",
         "Proxy Username (Space Admin)" => ce_integration_username,
         "Proxy Password (Space Admin)" => ce_integration_password
       }
