@@ -10,6 +10,11 @@ module KineticSdk
     def add_space_attribute(attribute_name, attribute_value, headers=default_headers)
       # first find the space
       response = find_space({ "include" => "attributes"}, headers)
+      # hack to try a second time if space isn't found
+      if response.status == 404
+        sleep 2
+        response = find_space({ "include" => "attributes"}, headers)
+      end
       space = response.content["space"]
       attributes = space["attributes"]
       # either add or update the attribute value
