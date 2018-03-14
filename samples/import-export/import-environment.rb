@@ -456,21 +456,45 @@ if options.importCE
     # Update Kinetic Task webhook URLs to point to the task server
     requestce_sdk_space.find_webhooks_on_space.content['webhooks'].each do |webhook|
       url = webhook['url']
-      # if the webhook contains a Kinetic Task URL, replace the server/host portion
-      if url.index('/kinetic-task/app/api/v1') > -1
+      # if the webhook contains a Kinetic Task URL
+      if url.include?('/kinetic-task/app/api/v1')
+        # replace the server/host portion
         apiIndex = url.index('/app/api/v1')
         url = url.sub(url.slice(0..apiIndex-1), task_server)
-        requestce_sdk_space.update_webhook_on_space(webhook['name'], { "url" => url })
+        # update the webhook
+        requestce_sdk_space.update_webhook_on_space(webhook['name'], { 
+          "url" => url,
+          # add the signature access key
+          "authStrategy" => {
+            "type" => "Signature",
+            "properties" => [
+              { "name" => "Key", "value" => task_access_key['identifier'] },
+              { "name" => "Secret", "value" => task_access_key['secret'] }
+            ]
+          }
+        })
       end
     end
     requestce_sdk_space.find_kapps.content['kapps'].each do |kapp|
       requestce_sdk_space.find_webhooks_on_kapp(kapp['slug']).content['webhooks'].each do |webhook|
         url = webhook['url']
-        # if the webhook contains a Kinetic Task URL, replace the server/host portion
-        if url.index('/kinetic-task/app/api/v1') > -1
+        # if the webhook contains a Kinetic Task URL
+        if url.include?('/kinetic-task/app/api/v1')
+          # replace the server/host portion
           apiIndex = url.index('/app/api/v1')
           url = url.sub(url.slice(0..apiIndex-1), task_server)
-          requestce_sdk_space.update_webhook_on_kapp(kapp['slug'], webhook['name'], { "url" => url })
+          # update the webhook
+          requestce_sdk_space.update_webhook_on_kapp(kapp['slug'], webhook['name'], { 
+            "url" => url,
+            # add the signature access key
+            "authStrategy" => {
+              "type" => "Signature",
+              "properties" => [
+                { "name" => "Key", "value" => task_access_key['identifier'] },
+                { "name" => "Secret", "value" => task_access_key['secret'] }
+              ]
+            }
+          })
         end
       end
     end
