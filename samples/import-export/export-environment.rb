@@ -54,7 +54,7 @@ class ExportOptions
       elsif type.to_s.downcase == "task"
         options.exportCE = false
         options.exportTask = true
-      else 
+      else
         options.exportCE = true
         options.exportTask = true
       end
@@ -82,7 +82,7 @@ class ExportOptions
     options
   end
 end
-  
+
 # Determine the Present Working Directory
 pwd = File.expand_path(File.dirname(__FILE__))
 
@@ -199,11 +199,13 @@ if options.exportCE
     FileUtils.rm_rf Dir.glob("#{ceDir}/*")
 
     # Create space.json (All Arrays except attributes and security policies should be excluded)
-    spaceJson = JSON.pretty_generate(space.reject {|k,v| v.is_a?(Array) && k != "attributes" && k != "securityPolicies" })
+    includeWithSpace = ['attributes', 'securityPolicies'];
+    spaceJson = JSON.pretty_generate(space.reject {|k,v| v.is_a?(Array) && !includeWithSpace.include?(k)})
     File.open("#{ceDir}/space.json", 'w') { |file| file.write(spaceJson) }
 
     # Loop over the rest of the space objects and create files for them
-    spaceObjects = space.reject {|k,v| !v.is_a?(Array) || k == "attributes" || k == "securityPolicies" || k == "kapps" || k.start_with?("bridge")}
+    hasOwnFolder = ['kapps', 'bridges', 'models', 'teams']
+    spaceObjects = space.reject {|k,v| !v.is_a?(Array) || includeWithSpace.include?(k) || hasOwnFolder.include?(k)}
     spaceObjects.each do | k, v |
       File.open("#{ceDir}/#{k}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
     end
@@ -212,15 +214,28 @@ if options.exportCE
     puts "Building Bridge Directory Structure"
     Dir.mkdir("#{ceDir}/bridges", 0700) unless Dir.exist?("#{ceDir}/bridges")
     Dir.chdir("#{ceDir}/bridges")
-    bridgeObjects = space.select {|k,v| k.start_with?("bridge")}
 
-    # Loop over bridges and bridge mappings and create structures accordingly
-    bridgeObjects.each do | k, v |
-      Dir.mkdir("#{ceDir}/bridges/#{k}", 0700) unless Dir.exist?("#{ceDir}/bridges/#{k}")
-      Dir.chdir("#{ceDir}/bridges/#{k}")
-      v.each do |obj|
-        File.open("#{ceDir}/bridges/#{k}/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
-      end
+    Dir.mkdir("#{ceDir}/bridges/bridges", 0700) unless Dir.exist?("#{ceDir}/bridges/bridges")
+    Dir.chdir("#{ceDir}/bridges/bridges")
+    space["bridges"].each do |obj|
+      File.open("#{ceDir}/bridges/bridges/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+    end
+
+    ## BRIDGE MODELS ##
+    Dir.mkdir("#{ceDir}/bridges/bridgeModels", 0700) unless Dir.exist?("#{ceDir}/bridges/bridgeModels")
+    Dir.chdir("#{ceDir}/bridges/bridgeModels")
+    space["models"].each do |obj|
+      File.open("#{ceDir}/bridges/bridgeModels/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+    end
+
+
+    ## TEAMS ##
+    puts "Building Teams Directory Structure"
+    Dir.mkdir("#{ceDir}/teams", 0700) unless Dir.exist?("#{ceDir}/teams")
+    Dir.chdir("#{ceDir}/teams")
+    teams_array = requestce_sdk.find_teams({"include" => "details,attributes"}).content["teams"]
+    teams_array.each do |obj|
+      File.open("#{ceDir}/teams/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
     end
 
     ## KAPPS ##
@@ -233,11 +248,13 @@ if options.exportCE
       Dir.chdir(kappDir)
 
       # Create kapp.json (All Arrays except attributes and security policies should be excluded)
-      kappJson = JSON.pretty_generate(kapp.reject {|k,v| v.is_a?(Array) && k != "attributes" && k != "securityPolicies" })
+      includeWithKapp = ['attributes', 'securityPolicies'];
+      kappJson = JSON.pretty_generate(kapp.reject {|k,v| v.is_a?(Array) && !includeWithKapp.include?(k)})
       File.open("#{kappDir}/kapp.json", 'w') { |file| file.write(kappJson) }
 
       # Loop over the rest of the kapp objects and create files for them
-      kappObjects = kapp.reject {|k,v| !v.is_a?(Array) || k == "attributes" || k == "securityPolicies" || k == "categorizations"}
+      propsToExlucde = ['categorizations', 'fields']
+      kappObjects = kapp.reject {|k,v| !v.is_a?(Array) || includeWithKapp.include?(k) || propsToExlucde.include?(k)}
       kappObjects.each do | k, v |
         if k == "forms"
           Dir.mkdir("#{kappDir}/forms", 0700) unless Dir.exist?("#{kappDir}/forms")
