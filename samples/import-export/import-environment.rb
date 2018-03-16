@@ -663,6 +663,19 @@ if options.importTask
             },
             "categories" => []
           })
+        # update the Kinetic Task Tree Run v2 handler
+        elsif File.basename(handler_file).start_with?("kinetic_task_tree_run_v2")
+          task_sdk.update_handler(File.basename(handler_file, ".zip"), {
+            "properties" => {
+              "username" => ce_integration_username,
+              "password" => ce_integration_password,
+              "kinetic_task_location" => "#{task_server}",
+              "signature_key" => task_access_key["identifier"],
+              "signature_secret" => task_access_key["secret"],
+              "enable_debug_logging" => "No"
+            },
+            "categories" => []
+          })
         # update each Kinetic Task handler - need API to get list of info values?
         elsif File.basename(handler_file).start_with?("kinetic_task")
           task_sdk.update_handler(File.basename(handler_file, ".zip"), {
