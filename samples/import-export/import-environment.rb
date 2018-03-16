@@ -244,6 +244,13 @@ if options.importCE
   end
 
   if import
+
+    # Locate Space Import Directory
+    request_ce_dir = "#{space_dir}/ce"
+
+    # Load the space
+    space = JSON.parse(File.read("#{request_ce_dir}/space.json"))
+
     # Create the space
     puts "Creating the \"#{space_slug}\" space"
     requestce_sdk_system.add_space(space_name, space_slug)
@@ -270,6 +277,12 @@ if options.importCE
       "spaceAdmin" => true
     })
 
+    # Update the bundle path
+    requestce_sdk_system.update_space_in_system(space_slug, {
+      "sharedBundleBase" => space.delete("sharedBundleBase"),
+      "bundlePath" => space.delete("bundlePath")
+    })
+
     # Log into the Space with the Space Admin user
     requestce_sdk_space = KineticSdk::RequestCe.new({
       app_server_url: ce_server,
@@ -279,82 +292,44 @@ if options.importCE
       options: { log_level: log_level }
     })
 
-    # Locate Space Import Directory
-    request_ce_dir = "#{space_dir}/ce"
+    # update space name and slug from the properties that were passed in
+    space['name'] = space_name
+    space['slug'] = space_slug
+    # update filestore settings
+    space['filestore'] = {
+      'slug' => filestore_slug,
+      'filehubUrl' => filehub_server
+    }
+    # add space attribute definitions
+    space['spaceAttributeDefinitions'] = 
+      JSON.parse(File.read("#{request_ce_dir}/spaceAttributeDefinitions.json"))
+    # add team attribute definitions
+    space['teamAttributeDefinitions'] =
+      JSON.parse(File.read("#{request_ce_dir}/teamAttributeDefinitions.json"))
+    # add user attribute definitions
+    space['userAttributeDefinitions'] = 
+      JSON.parse(File.read("#{request_ce_dir}/userAttributeDefinitions.json"))
+    # add user profile attribute definitions
+    space['userProfileAttributeDefinitions'] = 
+      JSON.parse(File.read("#{request_ce_dir}/userProfileAttributeDefinitions.json"))
+    # add bridges
+    space['bridges'] = Dir["#{request_ce_dir}/bridges/bridges/*"].map do |bridge_file|
+      JSON.parse(File.read("#{bridge_file}")).delete_if { |k,v| k == "key" }
+    end
+    # update the space
+    requestce_sdk_space.update_space(space)
 
-    # Create Space Attribute Definitions
-    spaceAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/spaceAttributeDefinitions.json"))
-    spaceAttributeDefinitions.each do |obj|
-      requestce_sdk_space.add_space_attribute_definition(
-        obj["name"],
-        obj["description"],
-        obj["allowsMultiple"]
-      )
+    # add bridge models
+    Dir["#{request_ce_dir}/bridges/bridgeModels/*"].map do |bridge_model_file|
+      requestce_sdk_space.add_bridge_model(JSON.parse(File.read("#{bridge_model_file}")))
+    end
+    # add teams
+    Dir["#{request_ce_dir}/teams/*"].map do |team_file|
+      requestce_sdk_space.add_team(JSON.parse(File.read("#{team_file}")))
     end
 
-    # Create Team Attribute Definitions
-    spaceAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/teamAttributeDefinitions.json"))
-    spaceAttributeDefinitions.each do |obj|
-      requestce_sdk_space.add_space_attribute_definition(
-        obj["name"],
-        obj["description"],
-        obj["allowsMultiple"]
-      )
-    end
-
-    # Create User Attribute Definitions
-    userAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/userAttributeDefinitions.json"))
-    userAttributeDefinitions.each do |obj|
-      requestce_sdk_space.add_user_attribute_definition(
-        obj["name"],
-        obj["description"],
-        obj["allowsMultiple"]
-      )
-    end
-
-    # Create User Profile Attribute Definitions
-    userProfileAttributeDefinitions = JSON.parse(File.read("#{request_ce_dir}/userProfileAttributeDefinitions.json"))
-    userProfileAttributeDefinitions.each do |obj|
-      requestce_sdk_space.add_user_profile_attribute_definition(
-        obj["name"],
-        obj["description"],
-        obj["allowsMultiple"]
-      )
-    end
-
-    # Update the Space with all attributes and properties
-    space_json = JSON.parse(File.read("#{request_ce_dir}/space.json"))
-    # Remove the space slug and space name (slug/name from the template)
-    space_json.delete("slug")
-    space_json.delete("name")
-    # Update the filestore settings
-    if space_json.has_key?('filestore')
-      space_json['filestore']['slug'] = filestore_slug
-      space_json['filestore']['filehubUrl'] = filehub_server
-    end
-    requestce_sdk_space.update_space(space_json)
     # Set Company Name Attribute on Space
     requestce_sdk_space.add_space_attribute("Company Name", "#{space_name}")
-
-    # Import Bridges
-    bridges_dir = "#{request_ce_dir}/bridges/bridges"
-    Dir["#{bridges_dir}/*"].each do |dirname|
-      bridge = JSON.parse(File.read("#{dirname}"))
-      bridge.delete("key")
-      requestce_sdk_space.add_bridge(bridge)
-    end
-
-    # Import Bridge Models
-    bridge_models_dir = "#{request_ce_dir}/bridges/bridgeModels"
-    Dir["#{bridge_models_dir}/*"].each do |dirname|
-      requestce_sdk_space.add_bridge_model(JSON.parse(File.read("#{dirname}")))
-    end
-
-    # Import Teams
-    teams_dir = "#{request_ce_dir}/teams"
-    Dir["#{teams_dir}/*"].each do |dirname|
-      requestce_sdk_space.add_team(JSON.parse(File.read("#{dirname}")))
-    end
 
     # Delete OOTB Catalog Kapp
     requestce_sdk_space.delete_kapp("catalog");
@@ -448,8 +423,7 @@ if options.importCE
     end
 
     # Import Space Webhooks
-    webhooks = JSON.parse(File.read("#{request_ce_dir}/webhooks.json"))
-    webhooks.each do |obj|
+    JSON.parse(File.read("#{request_ce_dir}/webhooks.json")).each do |obj|
       requestce_sdk_space.add_space_webhook(obj)
     end
 
