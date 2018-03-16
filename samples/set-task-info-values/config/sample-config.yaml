@@ -1,0 +1,40 @@
+# SDK log level (off | info | debug | trace)
+sdk_log_level: "info"
+
+# Properties to for connecting to Kinetic Task
+task:
+  server: "http://localhost:8080/kinetic-task"
+  credentials:
+    username: "admin"
+    password: "admin"
+
+#### HANDLER INFO VALUE EXAMPLES ####
+handlers_to_update:
+
+  # Kinetic Task kinetic_request_ce_notification_template_send_v1 handler
+  kinetic_request_ce_notification_template_handler:
+    api_server:
+    api_username:
+    api_password:
+    space_slug:
+    smtp_server: "smtp.gmail.com"
+    smtp_port: "25"
+    smtp_tls: "true"
+    smtp_username: ""
+    smtp_password: ""
+    smtp_from_address: ""
+
+  # Kinetic Request CE Info (Set on Kinetic Request CE Handlers)
+  kinetic_request_ce:
+    api_server: "http://localhost:8080/kinetic"
+    api_username: "integration_user"
+    api_password: "password"
+    space_slug: "playground"
+
+  # Kinetic Data SMTP Info (Set on SMTP Handler)
+  smtp:
+    server: "smtp.gmail.com"
+    port: "25"
+    tls: "true"
+    username: ""
+    password: ""
