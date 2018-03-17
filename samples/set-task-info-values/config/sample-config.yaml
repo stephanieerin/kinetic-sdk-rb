@@ -8,11 +8,13 @@ task:
     username: "admin"
     password: "admin"
 
-#### HANDLER INFO VALUE EXAMPLES ####
+#### HANDLERS TO UPDATE ####
 handlers_to_update:
 
-  # Kinetic Task kinetic_request_ce_notification_template_send_v1 handler
-  kinetic_request_ce_notification_template_handler:
+  ###  Add or remove handlers below as needed  ###
+
+  # Kinetic Request kinetic_request_ce_notification_template_send_v1 handler
+  kinetic_request_ce_notification_template_send:
     api_server:
     api_username:
     api_password:
@@ -31,8 +33,8 @@ handlers_to_update:
     api_password: "password"
     space_slug: "playground"
 
-  # Kinetic Data SMTP Info (Set on SMTP Handler)
-  smtp:
+  # SMTP Info (Set on SMTP Handler)
+  smtp_email:
     server: "smtp.gmail.com"
     port: "25"
     tls: "true"

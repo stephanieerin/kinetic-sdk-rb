@@ -14,7 +14,7 @@ Documentation for Setting Info Values on Task Handlers
     * handlers to update
       * for each type of handler you would like to update, create a yaml object
         named with the same prefix of the handlers you would like to update.
-        each type should also list the cooresponding info properties and the Values
+        each type should also list the corresponding info properties and the Values
         you would like to update.
 
 ## Update Instructions
@@ -33,5 +33,5 @@ Run the script, passing in the appropriate options.
 #                   directory.  Note: the value should not be prefixed with
 #                   the config/ path.
 #
-jruby export-environment.rb -c <config-file.yaml> -p <handler-type-prefix>
+jruby set-info-values.rb -c <config-file.yaml> -p <handler-type-prefix>
 ```
