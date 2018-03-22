@@ -139,6 +139,8 @@ else
   exit
 end
 
+require 'parallel'
+
 # Parse options from command line arguments
 options = ImportOptions.parse(ARGV)
 
@@ -335,7 +337,7 @@ if options.importCE
     requestce_sdk_space.delete_kapp("catalog");
 
     # Import Kapps
-    Dir["#{request_ce_dir}/kapp-*"].each do |dirname|
+    Parallel.each(Dir["#{request_ce_dir}/kapp-*"]) do |dirname|
 
       # Import Kapp
       kapp_json = JSON.parse(File.read("#{dirname}/kapp.json"))
@@ -617,7 +619,7 @@ if options.importTask
     taskDir = "#{space_dir}/task"
 
     # Import space handlers
-    Dir[taskDir+"/handlers/*"].each do |handler|
+    Parallel.each(Dir[taskDir+"/handlers/*"]) do |handler|
       # skip the smtp email send handler (handled after this loop)
       next if handler.end_with?("smtp_email_send_v1.zip")
 
@@ -704,7 +706,7 @@ if options.importTask
 
 
     # Import trees
-    Dir[taskDir+"/trees/**/*"].each do |tree|
+    Parallel.each(Dir[taskDir+"/trees/**/*"]) do |tree|
       unless File.directory?(tree)
         # Get the name of the directory
         source_name = File.dirname(tree).split("/").last
@@ -734,20 +736,20 @@ if options.importTask
     end
 
     # Import routines
-    Dir[taskDir+"/routines/*"].each do |routine|
+    Parallel.each(Dir[taskDir+"/routines/*"]) do |routine|
       unless File.directory?(routine)
         task_sdk.import_routine(File.new(routine, 'rb'), true)
       end
     end
 
     # Create Groups
-    Dir[taskDir+"/groups/*"].each do |file|
+    Parallel.each(Dir[taskDir+"/groups/*"]) do |file|
       group = JSON.parse(File.read(file))
       task_sdk.add_group(group['name']) if task_sdk.find_group(group['name']).status == 404
     end
 
     # Create Policy Rules
-    Dir[taskDir+"/policyRules/*"].each do |file|
+    Parallel.each(Dir[taskDir+"/policyRules/*"]) do |file|
       policy_rule = JSON.parse(File.read(file))
       if task_sdk.find_policy_rule(policy_rule).status == 404
         # create the policy rule
@@ -762,7 +764,7 @@ if options.importTask
     task_sdk.update_system_policy_rule("Allow All")
 
     # Create Categories
-    Dir[taskDir+"/categories/*"].each do |file|
+    Parallel.each(Dir[taskDir+"/categories/*"]) do |file|
       category = JSON.parse(File.read(file))
       if task_sdk.find_category(category['name']).status == 404
         # create the category
