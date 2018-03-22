@@ -140,6 +140,7 @@ else
 end
 
 require 'parallel'
+require 'slugify'
 
 # Parse options from command line arguments
 options = ImportOptions.parse(ARGV)
@@ -716,7 +717,7 @@ if options.importTask
         valid_sources << platform_task_source_name if platform_task_source_name.to_s.size > 0
         valid_sources.each do |defined_source_name|
           # If the tree directory is the slugified version of the source name
-          slugified_source_name = task_sdk.slugify(defined_source_name)
+          slugified_source_name = defined_source_name.slugify
           if (source_name == slugified_source_name || source_name == slugified_source_name.gsub("-", ""))
             # update the source name to be the defined source name
             source_name = defined_source_name

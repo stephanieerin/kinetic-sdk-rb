@@ -97,6 +97,8 @@ else
   exit
 end
 
+require 'slugify'
+
 # Parse options from command line arguments
 options = ExportOptions.parse(ARGV)
 
@@ -207,7 +209,7 @@ if options.exportCE
     hasOwnFolder = ['kapps', 'bridges', 'models', 'teams']
     spaceObjects = space.reject {|k,v| !v.is_a?(Array) || includeWithSpace.include?(k) || hasOwnFolder.include?(k)}
     spaceObjects.each do | k, v |
-      File.open("#{ceDir}/#{k}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
+      File.open("#{ceDir}/#{k.slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
     end
 
     ## BRIDGES ##
@@ -218,14 +220,14 @@ if options.exportCE
     Dir.mkdir("#{ceDir}/bridges/bridges", 0700) unless Dir.exist?("#{ceDir}/bridges/bridges")
     Dir.chdir("#{ceDir}/bridges/bridges")
     space["bridges"].each do |obj|
-      File.open("#{ceDir}/bridges/bridges/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+      File.open("#{ceDir}/bridges/bridges/#{obj['name'].slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
     end
 
     ## BRIDGE MODELS ##
     Dir.mkdir("#{ceDir}/bridges/bridgeModels", 0700) unless Dir.exist?("#{ceDir}/bridges/bridgeModels")
     Dir.chdir("#{ceDir}/bridges/bridgeModels")
     space["models"].each do |obj|
-      File.open("#{ceDir}/bridges/bridgeModels/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+      File.open("#{ceDir}/bridges/bridgeModels/#{obj['name'].slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
     end
 
 
@@ -235,7 +237,7 @@ if options.exportCE
     Dir.chdir("#{ceDir}/teams")
     teams_array = requestce_sdk.find_teams({"include" => "details,attributes"}).content["teams"]
     teams_array.each do |obj|
-      File.open("#{ceDir}/teams/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+      File.open("#{ceDir}/teams/#{obj['name'].slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
     end
 
     ## KAPPS ##
@@ -262,7 +264,7 @@ if options.exportCE
             File.open("#{kappDir}/forms/#{form['slug']}.json", 'w') { |file| file.write(JSON.pretty_generate(form)) }
           end
         else
-          File.open("#{kappDir}/#{k}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
+          File.open("#{kappDir}/#{k.slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
         end
       end
     end
@@ -273,7 +275,7 @@ if options.exportCE
     Dir.chdir("#{ceDir}/teams")
     teams_array = requestce_sdk.find_teams({"include" => "details,attributes"}).content["teams"]
     teams_array.each do |obj|
-      File.open("#{ceDir}/teams/#{obj['name']}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+      File.open("#{ceDir}/teams/#{obj['name'].slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
     end
 
     ## SUBMISSIONS ##
