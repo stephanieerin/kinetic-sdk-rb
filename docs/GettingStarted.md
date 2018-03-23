@@ -4,7 +4,7 @@ This is a guide for getting up and running quickly with the Kinetic SDK.
 
 ## About
 
-The Kinetic SDK is a library that provides easy to use methods for interacting with the REST API built into Kinetic Data applications.  The intention is for the end user to create a Ruby program/script, and include the Kinetic SDK into the program.  This guide shows how to do that.
+The Kinetic SDK is a library that provides easy to use methods for interacting with the REST API built into Kinetic Data applications. The intention is for the end user to create a Ruby program/script, and include the Kinetic SDK into the program. This guide shows how to do that.
 
 ## How To
 
@@ -12,7 +12,7 @@ This document assumes you have the necessary [requirements](../README.md) instal
 
 This guide also assumes you have the `git` program installed on your client machine in order to obtain the latest kinetic-sdk-rb code from Github.
 
-If you do not have git and don't want to install it, you can download a zip file of the [latest Kinetic SDK code](https://github.com/kineticdata/kinetic-sdk-rb/archive/master.zip).  You would then unzip this file, and copy the extracted `kinetic-sdk-rb-master` directory to the `my_project/vendor/kinetic-sdk-rb` directory.
+If you do not have git and don't want to install it, you can download a zip file of the [latest Kinetic SDK code](https://github.com/kineticdata/kinetic-sdk-rb/archive/master.zip). You would then unzip this file, and copy the extracted `kinetic-sdk-rb-master` directory to the `my_project/vendor/kinetic-sdk-rb` directory.
 
 ### Prepare a Ruby program
 
@@ -30,7 +30,7 @@ git clone https://github.com/kineticdata/kinetic-sdk-rb.git my_project/vendor/ki
 
 # copy the sample driver to your project's root directory
 
-cp my_project/vendor/kinetic-sdk-rb/samples/driver.rb my_project/driver.rb
+cp my_project/vendor/kinetic-sdk-rb/samples/driver/driver.rb my_project/driver.rb
 ```
 
 ### Try the driver

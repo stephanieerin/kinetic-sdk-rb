@@ -2,8 +2,11 @@ module KineticSdk
   module Utils
 
     # The Logger module provides methods to output at different levels based on 
-    # a configuration property.  The default log level is 'off', but can be 
+    # a configuration property.  The default log level is `off`, but can be 
     # turned on by passing in the 'log_level' option.
+    #
+    # Available Levels: `trace`, `debug`, `info`, `off`
+    #
     module Logger
 
       # Logs the message if the log level is set to debug or lower.

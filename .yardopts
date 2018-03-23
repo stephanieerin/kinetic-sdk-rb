@@ -3,5 +3,5 @@
 --markup markdown
 --output-dir rdoc
 --readme README.md
---load docs/yard-resolve-links.rb
+--load .yardoc-includes/yard-helpers.rb
 'lib/**/*.rb' - 'docs/*.md'
