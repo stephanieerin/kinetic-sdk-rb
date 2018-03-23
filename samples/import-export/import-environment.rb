@@ -621,8 +621,6 @@ if options.importTask
 
     # Import space handlers
     Parallel.each(Dir[taskDir+"/handlers/*"]) do |handler|
-      # skip the smtp email send handler (handled after this loop)
-      next if handler.end_with?("smtp_email_send_v1.zip")
 
       handler_file = File.new(handler, 'rb')
 
@@ -679,6 +677,17 @@ if options.importTask
             },
             "categories" => []
           })
+        # update the SMTP Email Send handler
+        elsif File.basename(handler_file).start_with?("smtp_email_send_v1")
+          task_sdk.update_handler("smtp_email_send_v1", {
+            "properties" => {
+              "server" => env["smtp"]["server"],
+              "port" => env["smtp"]["port"],
+              "tls" => env["smtp"]["tls"],
+              "username" => env["smtp"]["username"],
+              "password" => env["smtp"]["password"]
+            }
+          })
         # update each Kinetic Task handler - need API to get list of info values?
         elsif File.basename(handler_file).start_with?("kinetic_task")
           task_sdk.update_handler(File.basename(handler_file, ".zip"), {
@@ -693,18 +702,6 @@ if options.importTask
         end
       end
     end
-
-    # Update SMTP handler
-    task_sdk.update_handler("smtp_email_send_v1", {
-      "properties" => {
-        "server" => env["smtp"]["server"],
-        "port" => env["smtp"]["port"],
-        "tls" => env["smtp"]["tls"],
-        "username" => env["smtp"]["username"],
-        "password" => env["smtp"]["password"]
-      }
-    })
-
 
     # Import trees
     Parallel.each(Dir[taskDir+"/trees/**/*"]) do |tree|
