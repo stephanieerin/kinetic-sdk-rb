@@ -11,6 +11,9 @@ $:.unshift File.join(gemdir, 'multipart-post-2.0.0', 'lib')
 $:.unshift File.join(gemdir, 'parallel-1.12.1', 'lib')
 $:.unshift File.join(gemdir, 'slugify-1.0.7', 'lib')
 
+require 'parallel'
+require 'slugify'
+
 # require version
 require File.join(pwd, 'kinetic-sdk', 'version')
 # require utilities

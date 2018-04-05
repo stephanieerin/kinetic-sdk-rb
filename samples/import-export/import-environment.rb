@@ -139,9 +139,6 @@ else
   exit
 end
 
-require 'parallel'
-require 'slugify'
-
 # Parse options from command line arguments
 options = ImportOptions.parse(ARGV)
 

@@ -1,5 +1,4 @@
 require 'fileutils'
-require 'slugify'
 
 module KineticSdk
   class Task

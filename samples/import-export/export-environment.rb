@@ -97,8 +97,6 @@ else
   exit
 end
 
-require 'slugify'
-
 # Parse options from command line arguments
 options = ExportOptions.parse(ARGV)
 

@@ -1,5 +1,3 @@
-require 'slugify'
-
 module KineticSdk
   class Task
 
