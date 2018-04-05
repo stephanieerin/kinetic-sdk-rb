@@ -17,6 +17,7 @@ module KineticSdk
     # @param headers [Hash] hash of headers to send, default is basic authentication
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def wait_until_alive(url, headers=header_basic_auth)
+      url = url[1..-1] if url.start_with?("/")
       while !is_alive?("#{@api_url}/#{url}", headers) do
         info("Web server is not ready, waiting...")
         sleep 3
