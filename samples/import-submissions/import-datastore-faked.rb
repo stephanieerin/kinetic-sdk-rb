@@ -3,8 +3,8 @@
 # This driver file assumes the Kinetic SDK is located in the relative directory:
 #   - vendor/kinetic-sdk-rb
 #
-# Before running this, be sure to install the faker gem, and ruby-progressbar gems
-# on the machine running this script
+# Before running this, be sure to install the faker gem on the machine 
+# running this script
 #
 #
 # 1. Ensure ruby (or jruby) is installed
@@ -24,6 +24,8 @@ require 'ostruct'
 require 'time'
 require 'yaml'
 require 'faker'
+require 'thread'
+
 
 class ImportOptions
 
@@ -96,8 +98,6 @@ else
   exit
 end
 
-require 'slugify'
-require 'parallel'
 require "#{pwd}/helpers"
 
 # Parse options from command line arguments
@@ -128,9 +128,10 @@ ce_credentials_space_admin = {
 number_to_import = options.number_of_submissions || 100
 threads = options.number_of_threads || 1
 
-form_name = "People2"
-form_slug = "people2"
-fields = ['First Name', 'Last Name', 'City', 'State', 'Zip', 'Age']
+suffix = Time.now.to_i
+form_name = "People #{suffix}"
+form_slug = "people-#{suffix}"
+fields = ['First Name', 'Last Name', 'Street', 'City', 'State', 'Zip', 'Age', 'Phone']
 
 # Log into the Space with the Space Admin user
 requestce_sdk_space = KineticSdk::RequestCe.new({
@@ -159,10 +160,12 @@ def build_data
   {
     'First Name'        => Faker::Name.first_name,
     'Last Name'         => Faker::Name.last_name,
+    'Street'            => Faker::Address.street_address,
     'City'              => Faker::Address.city,
     'State'             => Faker::Address.state,
     'Zip'               => Faker::Address.zip,
     'Age'               => Faker::Number.between(1, 100),
+    'Phone'             => Faker::PhoneNumber.phone_number
   }
 end
 
@@ -175,14 +178,16 @@ end
 @errors = []
 
 start = Time.now
-
+mutex = Mutex.new
 Parallel.map(
     1..number_to_import, 
     in_threads: threads, 
     preserve_results: true, 
     progress: "Importing #{number_to_import} submissions") do |i|
   response = requestce_sdk_space.add_datastore_submission(form_slug, {"values" => build_data})
-  response.status == 200 ? @total +=1 : @errors.push(response)
+  mutex.synchronize do 
+    response.status == 200 ? @total += 1 : @errors.push(response)
+  end
 end
 
 finish = Time.now
@@ -196,15 +201,17 @@ duration_seconds = finish - start
 duration_minutes = duration_seconds / 60
 duration_hours = duration_minutes / 60
 
+puts "-" * 80
+puts " Results: "
+puts "-" * 80
 puts "Start Time: #{start.inspect}"
 puts "End Time: #{finish.inspect}"
+puts "Threads: #{threads}"
 
 puts "Duration:"
 puts(sprintf "  %.3f hrs", duration_hours)
 puts(sprintf "  %.3f mins", duration_minutes)
 puts "  #{duration_seconds} secs"
-
-puts "Threads: #{threads}"
 
 puts "Submissions: (#{@total})"
 puts(sprintf "  %.3f submissions/hour", @total / duration_hours)
@@ -216,3 +223,4 @@ puts "Errors (#{@errors.size}):"
 @errors.each do |error|
   puts "  ERROR: #{error.inspect}"
 end
+puts ""
