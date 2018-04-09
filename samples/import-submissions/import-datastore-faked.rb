@@ -54,7 +54,7 @@ class ImportOptions
       end
 
       opts.on("-n NUMBER_OF_SUBMISSIONS", Integer,
-              "The number of submissions to import (default 1000)") do |number_of_submissions|
+              "The number of submissions to import (default 100)") do |number_of_submissions|
         options.number_of_submissions = number_of_submissions
       end
 
