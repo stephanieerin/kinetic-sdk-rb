@@ -139,9 +139,6 @@ else
   exit
 end
 
-require 'parallel'
-require 'slugify'
-
 # Parse options from command line arguments
 options = ImportOptions.parse(ARGV)
 
@@ -323,12 +320,19 @@ if options.importCE
     requestce_sdk_space.update_space(space)
 
     # add bridge models
-    Dir["#{request_ce_dir}/bridges/bridgeModels/*"].map do |bridge_model_file|
+    Parallel.each(Dir["#{request_ce_dir}/bridges/bridgeModels/*"]) do |bridge_model_file|
       requestce_sdk_space.add_bridge_model(JSON.parse(File.read("#{bridge_model_file}")))
     end
+
     # add teams
-    Dir["#{request_ce_dir}/teams/*"].map do |team_file|
+    Parallel.each(Dir["#{request_ce_dir}/teams/*"]) do |team_file|
       requestce_sdk_space.add_team(JSON.parse(File.read("#{team_file}")))
+    end
+
+    # add security policy definitions
+    requestce_sdk_space.delete_space_security_policy_definitions
+    Parallel.each(JSON.parse(File.read("#{request_ce_dir}/securityPolicyDefinitions.json"))) do |policy|
+      requestce_sdk_space.add_space_security_policy_definition(policy)
     end
 
     # Set Company Name Attribute on Space
@@ -341,63 +345,53 @@ if options.importCE
     Parallel.each(Dir["#{request_ce_dir}/kapp-*"]) do |dirname|
 
       # Import Kapp
-      kapp_json = JSON.parse(File.read("#{dirname}/kapp.json"))
-      kapp_slug = kapp_json['slug']
-      requestce_sdk_space.add_kapp(kapp_json['name'], kapp_json['slug'], kapp_json)
+      kapp = JSON.parse(File.read("#{dirname}/kapp.json"))
+      kapp_slug = kapp['slug']
 
-      # Import Category Attribute Definitions
-      obj_json = JSON.parse(File.read("#{dirname}/categoryAttributeDefinitions.json"))
-      obj_json.each do |obj|
-        requestce_sdk_space.add_category_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+      # Add Category Attribute Definitions
+      kapp['categoryAttributeDefinitions'] =
+        JSON.parse(File.read("#{dirname}/categoryAttributeDefinitions.json"))
+
+      # Add Form Attribute Definitions
+      kapp['formAttributeDefinitions'] = 
+        JSON.parse(File.read("#{dirname}/formAttributeDefinitions.json"))
+
+      # Add Kapp Attribute Definitions
+      kapp['kappAttributeDefinitions'] = 
+        JSON.parse(File.read("#{dirname}/kappAttributeDefinitions.json"))
+
+      # Add the Kapp
+      requestce_sdk_space.add_kapp(kapp['name'], kapp_slug, kapp)
+
+      # Add Categories
+      Parallel.each(JSON.parse(File.read("#{dirname}/categories.json"))) do |category|
+        requestce_sdk_space.add_category_on_kapp(kapp_slug, category)
       end
 
-      # Import Form Attribute Definitions
-      obj_json = JSON.parse(File.read("#{dirname}/formAttributeDefinitions.json"))
-      obj_json.each do |obj|
-        requestce_sdk_space.add_form_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
+      # Add Form Types
+      requestce_sdk_space.delete_form_types_on_kapp(kapp_slug)
+      Parallel.each(JSON.parse(File.read("#{dirname}/formTypes.json"))) do |form_type|
+        requestce_sdk_space.add_form_type_on_kapp(kapp_slug, form_type)
       end
 
-      # Import Kapp Attribute Definitions
-      obj_json = JSON.parse(File.read("#{dirname}/kappAttributeDefinitions.json"))
-      obj_json.each do |obj|
-        requestce_sdk_space.add_kapp_attribute_definition(kapp_slug, obj['name'], obj['description'], obj['allowsMultiple'])
-      end
-
-      # Import Security Policy Definitions
-      obj_json = JSON.parse(File.read("#{dirname}/securityPolicyDefinitions.json"))
-      # first delete all existing security policy definitions
+      # Add Security Policy Definitions
       requestce_sdk_space.delete_security_policy_definitions(kapp_slug)
-      # now import the form types defined in the space
-      obj_json.each do |obj|
+      Parallel.each(JSON.parse(File.read("#{dirname}/securityPolicyDefinitions.json"))) do |policy|
         requestce_sdk_space.add_security_policy_definition(kapp_slug, {
-          "name" => obj['name'],
-          "message" => obj['message'],
-          "rule" => obj['rule'],
-          "type" => obj['type']
+          "name" => policy['name'],
+          "message" => policy['message'],
+          "rule" => policy['rule'],
+          "type" => policy['type']
         })
       end
 
-      # Import Form Types
-      obj_json = JSON.parse(File.read("#{dirname}/formTypes.json"))
-      # first delete all existing form type
-      requestce_sdk_space.delete_form_types_on_kapp(kapp_slug)
-      # now import the form types defined in the space
-      obj_json.each do |obj|
-        requestce_sdk_space.add_form_type_on_kapp(kapp_slug, obj)
-      end
-
-      # Import Categories
-      obj_json = JSON.parse(File.read("#{dirname}/categories.json"))
-      obj_json.each do |obj|
-        requestce_sdk_space.add_category_on_kapp(kapp_slug, obj)
-      end
-
       # Import Forms
-      Dir["#{dirname}/forms/*"].each do |form|
+      Parallel.each(Dir["#{dirname}/forms/*"]) do |form|
         requestce_sdk_space.add_form(kapp_slug, JSON.parse(File.read("#{form}")))
       end
 
       # Import Submissions
+      # Not using Parallel here because unlicensed server will fail at 25 counts
       submissions_count = 0
       Dir["#{dirname}/data/*"].each do |form|
         # Parse form slug from directory path
@@ -419,19 +413,18 @@ if options.importCE
       end
 
       # Import Kapp Webhooks
-      obj_json = JSON.parse(File.read("#{dirname}/webhooks.json"))
-      obj_json.each do |obj|
-        requestce_sdk_space.add_webhook_on_kapp(kapp_slug, obj)
+      Parallel.each(JSON.parse(File.read("#{dirname}/webhooks.json"))) do |webhook|
+        requestce_sdk_space.add_webhook_on_kapp(kapp_slug, webhook)
       end
     end
 
     # Import Space Webhooks
-    JSON.parse(File.read("#{request_ce_dir}/webhooks.json")).each do |obj|
-      requestce_sdk_space.add_space_webhook(obj)
+    Parallel.each(JSON.parse(File.read("#{request_ce_dir}/webhooks.json"))) do |webhook|
+      requestce_sdk_space.add_space_webhook(webhook)
     end
 
     # Update Kinetic Task webhook URLs to point to the task server
-    requestce_sdk_space.find_webhooks_on_space.content['webhooks'].each do |webhook|
+    Parallel.each(requestce_sdk_space.find_webhooks_on_space.content['webhooks']) do |webhook|
       url = webhook['url']
       # if the webhook contains a Kinetic Task URL
       if url.include?('/kinetic-task/app/api/v1')
@@ -452,7 +445,7 @@ if options.importCE
         })
       end
     end
-    requestce_sdk_space.find_kapps.content['kapps'].each do |kapp|
+    Parallel.each(requestce_sdk_space.find_kapps.content['kapps']) do |kapp|
       requestce_sdk_space.find_webhooks_on_kapp(kapp['slug']).content['webhooks'].each do |webhook|
         url = webhook['url']
         # if the webhook contains a Kinetic Task URL
