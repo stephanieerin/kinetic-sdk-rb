@@ -1,3 +1,4 @@
+require 'faker'
 
 #--------------------------------------------------------------------------
 # HELPER METHODS
@@ -85,6 +86,7 @@ end
 
 # Builds submission data based on the form fields
 def build_submission_data(fields)
+  Faker::Config.locale = "en-US"
   fields.inject({}) do |data, field|
     case field
     when 'First Name'

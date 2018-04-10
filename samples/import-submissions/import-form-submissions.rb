@@ -27,7 +27,6 @@ require 'optparse'
 require 'ostruct'
 require 'time'
 require 'yaml'
-require 'faker'
 require 'thread'
 
 
