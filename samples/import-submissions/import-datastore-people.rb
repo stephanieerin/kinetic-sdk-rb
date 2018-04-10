@@ -8,13 +8,15 @@
 #
 #
 # 1. Ensure ruby (or jruby) is installed
-# 2. Create a yaml file in the 'config' directory (will be omitted from git)
-#      - add / edit the info values for the handlers you would like to update
-# 3. ruby import-datastore-faked.rb \
+# 2. Ensure the Faker gem is installed (gem install faker)
+# 3. Create a yaml file in the 'config' directory (will be omitted from git)
+#      - configure for your Request CE server
+# 4. ruby import-datastore-people.rb \
 #      -c <config-file-name.yaml> \
-#      -s space-slug \
-#      -n number_of_submissions (default 100) \
-#      -t number_of_threads (default 1)
+#      -s <space-slug> \
+#      -n [number_of_submissions (default 100)] \
+#      -t [number_of_threads (default 1)] \
+#      -x [datastore_slug (default people)]
 ################################################################################
 
 require 'fileutils'
@@ -46,23 +48,28 @@ class ImportOptions
       opts.separator ""
 
       opts.on("-c CONFIG_FILE",
-              "The config file to use for the export (must be in ./config directory)") do |cfg_file|
+              "REQUIRED - The config file to use for the export (must be in ./config directory)") do |cfg_file|
         options.cfg = cfg_file
       end
 
       opts.on("-s SPACE_SLUG",
-              "The slug of the Space to import to") do |slug|
+              "REQUIRED - The slug of the Space to import to") do |slug|
         options.space_slug = slug
       end
 
-      opts.on("-n NUMBER_OF_SUBMISSIONS", Integer,
+      opts.on("-n [NUMBER_OF_SUBMISSIONS (100)]", Integer,
               "The number of submissions to import (default 100)") do |number_of_submissions|
         options.number_of_submissions = number_of_submissions
       end
 
-      opts.on("-t NUMBER_OF_THREADS", Integer,
+      opts.on("-t [NUMBER_OF_THREADS (1)]", Integer,
               "The number of submission threads (default 1)") do |number_of_threads|
         options.number_of_threads = number_of_threads
+      end
+
+      opts.on("-x",
+              "Datastore slug (default people)") do |datastore_slug|
+        options.datastore_slug = datastore_slug
       end
 
       opts.separator ""
@@ -118,6 +125,11 @@ end
 sdk_log_level = ENV['SDK_LOG_LEVEL'] || env['sdk_log_level'] || "off"
 space_slug = options.space_slug
 
+unless space_slug
+  puts "The configuration file #{options.cfg} does not exist."
+  exit
+end
+
 ce_server = env["ce"]["server"]
 ce_credentials_space_admin = {
   "username" => env["ce"]["space_admin_credentials"]["username"],
@@ -125,12 +137,16 @@ ce_credentials_space_admin = {
 }
 
 # Set Script Variables and Constants
-number_to_import = options.number_of_submissions || 100
+number_to_import = options.number_of_submissions ? options.number_of_submissions.to_i : 100
 threads = options.number_of_threads || 1
 
-suffix = Time.now.to_i
-form_name = "People #{suffix}"
-form_slug = "people-#{suffix}"
+form_name = "People"
+form_slug = "people"
+if options.datastore_slug && options.datastore_slug != form_slug
+  form_name << " #{options.datastore_slug}"
+  form_slug << "-#{options.datastore_slug}"
+end
+
 fields = ['First Name', 'Last Name', 'Street', 'City', 'State', 'Zip', 'Age', 'Phone']
 
 # Log into the Space with the Space Admin user
@@ -152,7 +168,6 @@ if requestce_sdk_space.find_datastore_form(form_slug).status == 404
     form['pages'][0]['elements'].unshift(build_field_element(field))
     @fieldKey += 1
   end
-
   requestce_sdk_space.add_datastore_form(form)
 end
 
@@ -183,7 +198,7 @@ Parallel.map(
     1..number_to_import, 
     in_threads: threads, 
     preserve_results: true, 
-    progress: "Importing #{number_to_import} submissions") do |i|
+    progress: "Importing #{number_to_import} submissions to #{form_slug}") do |i|
   response = requestce_sdk_space.add_datastore_submission(form_slug, {"values" => build_data})
   mutex.synchronize do 
     response.status == 200 ? @total += 1 : @errors.push(response)
@@ -201,9 +216,7 @@ duration_seconds = finish - start
 duration_minutes = duration_seconds / 60
 duration_hours = duration_minutes / 60
 
-puts "-" * 80
-puts " Results: "
-puts "-" * 80
+puts "#{'-'*80}\n Results: #{form_name} (#{form_slug})\n#{'-'*80}"
 puts "Start Time: #{start.inspect}"
 puts "End Time: #{finish.inspect}"
 puts "Threads: #{threads}"
@@ -211,12 +224,12 @@ puts "Threads: #{threads}"
 puts "Duration:"
 puts(sprintf "  %.3f hrs", duration_hours)
 puts(sprintf "  %.3f mins", duration_minutes)
-puts "  #{duration_seconds} secs"
+puts(sprintf "  %.3f secs", duration_seconds)
 
 puts "Submissions: (#{@total})"
-puts(sprintf "  %.3f submissions/hour", @total / duration_hours)
-puts(sprintf "  %.3f submissions/minute", @total / duration_minutes)
-puts(sprintf "  %.3f submissions/second", @total / duration_seconds)
+puts(sprintf "  %.3f submissions/hr", @total / duration_hours)
+puts(sprintf "  %.3f submissions/min", @total / duration_minutes)
+puts(sprintf "  %.3f submissions/sec", @total / duration_seconds)
 
 puts "Errors (#{@errors.size}):"
 
