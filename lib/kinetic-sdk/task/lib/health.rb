@@ -19,7 +19,7 @@ module KineticSdk
     def wait_until_alive(url, headers=header_basic_auth)
       url = url[1..-1] if url.start_with?("/")
       while !is_alive?("#{@api_url}/#{url}", headers) do
-        info("Web server is not ready, waiting...")
+        info("Web server \"#{@api_url}/#{url}\" is not ready, waiting...")
         sleep 3
       end
     end
