@@ -36,6 +36,7 @@ ruby -v
 The Kinetic Ruby SDK uses the following gems, which are conveniently packaged in the SDK. You do not need to install these gems to the default gem path.
 
 * [mime-types](https://github.com/mime-types/ruby-mime-types) used by the multipart-post gem.
+* [mime-types-data](https://github.com/mime-types/mime-types-data) used by the multipart-post gem.
 * [multipart-post](https://github.com/nicksieger/multipart-post) for uploading files to the application REST APIs.
 * [parallel](https://github.com/grosser/parallel) used in some of the samples for importing data in parallel threads.
 * [ruby-progressbar](https://github.com/jfelchner/ruby-progressbar) used by parallel gem to indicate progress.
