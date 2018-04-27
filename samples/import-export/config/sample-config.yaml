@@ -31,6 +31,8 @@ task:
   oauth:
     endpoint_server: 
     redirect_endpoint_server: 
+  api_access_key_description: "Request CE"
+  api_access_key_identifier: "request-ce"
 
 # Properties for Kinetic Bridgehub
 bridgehub:

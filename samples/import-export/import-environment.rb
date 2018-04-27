@@ -196,8 +196,8 @@ task_oauth_redirect_server = (env["task"].has_key?("oauth") && env["task"]["oaut
   env["task"]["oauth"]["redirect_endpoint_server"] :
   task_server
 task_access_key = {
-  "description" => "Request CE",
-  "identifier" => "request-ce",
+  "description" => env["task"]["api_access_key_description"] || "Request CE",
+  "identifier" => env["task"]["api_access_key_identifier"] || "request-ce",
   "secret" => KineticSdk::Utils::Random.simple
 }
 oauth_secret_task = KineticSdk::Utils::Random.simple
@@ -281,7 +281,7 @@ if options.importCE
     # Create space users that were defined to be added on import
     (env['ce']['add_space_users_on_import'] || []).each do |user|
       if user['username']
-        puts "Adding the #{user['username']} usser to the \"#{space_slug}\" Request CE space."
+        puts "Adding the #{user['username']} user to the \"#{space_slug}\" Request CE space."
         requestce_sdk_system.add_user({
           "space_slug" => space_slug,
           "username" => user['username'],
@@ -344,7 +344,7 @@ if options.importCE
     requestce_sdk_space.update_space(space)
 
     # add bridge models
-    Parallel.each(Dir["#{request_ce_dir}/bridges/bridgeModels/*"]) do |bridge_model_file|
+    Dir["#{request_ce_dir}/bridges/bridgeModels/*"].each do |bridge_model_file|
       requestce_sdk_space.add_bridge_model(JSON.parse(File.read("#{bridge_model_file}")))
     end
 
