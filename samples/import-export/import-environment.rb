@@ -18,10 +18,12 @@
 #      -t <type of import>
 ################################################################################
 
+require 'erb'
 require 'fileutils'
 require 'json'
 require 'optparse'
 require 'ostruct'
+require 'pp'
 require 'time'
 require 'yaml'
 
@@ -151,10 +153,9 @@ export_space_slug = options.export_space_slug
 config_file = "#{pwd}/config/#{options.cfg}"
 env = nil
 begin
-  config = open(config_file)
-  env = YAML.load(config.read)
+  env = YAML.load(ERB.new(open(config_file).read).result(binding))
 rescue
-  puts "The configuration file #{options.cfg} does not exist."
+  puts "There was a problem loading the configuration file #{options.cfg}: #{$!}"
   exit
 end
 
@@ -277,6 +278,22 @@ if options.importCE
       "spaceAdmin" => true
     })
 
+    # Create space users that were defined to be added on import
+    (env['ce']['add_space_users_on_import'] || []).each do |user|
+      if user['username']
+        puts "Adding the #{user['username']} usser to the \"#{space_slug}\" Request CE space."
+        requestce_sdk_system.add_user({
+          "space_slug" => space_slug,
+          "username" => user['username'],
+          "password" => user['password'],
+          "displayName" => user['display_name'],
+          "email" => user['email'],
+          "enabled" => user['enabled'] || true,
+          "spaceAdmin" => user['space_admin'].to_s.downcase == "true"
+        })
+      end
+    end
+
     # Update the bundle path
     requestce_sdk_system.update_space_in_system(space_slug, {
       "sharedBundleBase" => space.delete("sharedBundleBase"),
@@ -315,6 +332,13 @@ if options.importCE
     # add bridges
     space['bridges'] = Dir["#{request_ce_dir}/bridges/bridges/*"].map do |bridge_file|
       JSON.parse(File.read("#{bridge_file}")).delete_if { |k,v| k == "key" }
+    end
+
+    # exporter substitutes the original space slug with `<space-slug>`
+    (space['attributes'] || []).collect! do |a|
+      { "name" => a['name'],
+        "values" => a['values'].collect! { |v| v.to_s.gsub("<space-slug>", space_slug) }
+      }
     end
     # update the space
     requestce_sdk_space.update_space(space)
@@ -469,8 +493,10 @@ if options.importCE
       end
     end
 
-    # Set the value of the "Response Server Url" Space attribute
-    requestce_sdk_space.add_space_attribute("Discussion Server Url", "")
+    # Clear the value of the "Discussion Server Url" Space attribute
+    if env['ce']['remove_discussion_server'].to_s.downcase == "true"
+      requestce_sdk_space.add_space_attribute("Discussion Server Url", "")
+    end
     # Set the value of the "Task Server Url" Space attribute
     requestce_sdk_space.add_space_attribute("Task Server Url", task_server)
     # Set the value of the "Web Server Url" Space attribute

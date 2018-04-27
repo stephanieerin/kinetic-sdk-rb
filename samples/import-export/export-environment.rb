@@ -13,10 +13,12 @@
 #      -t <type of export>
 ################################################################################
 
+require 'erb'
 require 'fileutils'
 require 'json'
 require 'optparse'
 require 'ostruct'
+require 'pp'
 require 'time'
 require 'yaml'
 
@@ -47,7 +49,7 @@ class ExportOptions
     opts.separator ""
 
     opts.on("-t EXPORT TYPE",
-            "The type of export to run (ce,task,all") do |type|
+            "The type of export to run (ce,task,all)") do |type|
       if type.to_s.downcase == "ce"
         options.exportCE = true
         options.exportTask = false
@@ -100,16 +102,6 @@ end
 # Parse options from command line arguments
 options = ExportOptions.parse(ARGV)
 
-# Build mapping of kapp/forms to export submissions for
-formsToExport = {"admin" => [
-  'notification-template-dates',
-  'notification-data',
-  'registered-images'
-]}
-# Build an Array of All attributes to remove from JSON export
-# authStrategy is for webhooks / key is for bridges
-attrsToDelete = ["createdAt","createdBy","updatedAt","updatedBy","closedAt","closedBy","id","authStrategy","key","handle"]
-
 # Get space slug from Arguments
 space_slug = options.space_slug
 space_name = nil
@@ -118,10 +110,9 @@ space_name = nil
 config_file = "#{pwd}/config/#{options.cfg}"
 env = nil
 begin
-  config = open(config_file)
-  env = YAML.load(config.read)
+  env = YAML.load(ERB.new(open(config_file).read).result(binding))
 rescue
-  puts "The configuration file #{options.cfg} does not exist."
+  puts "There was a problem loading the configuration file #{options.cfg}: #{$!}"
   exit
 end
 
@@ -131,6 +122,15 @@ log_level = ENV['SDK_LOG_LEVEL'] || env['sdk_log_level'] || "info"
 space_dir = "#{pwd}/exports/#{space_slug}"
 FileUtils.mkdir_p(space_dir, :mode => 0700) unless Dir.exist?(space_dir)
 Dir.chdir(space_dir)
+
+# Build mapping of kapp/forms to export submissions for
+forms_to_export = env['ce']['export_form_data'] || 
+  { "admin" => [ 'notification-template-dates', 'notification-data', 'registered-images' ] }
+
+# Build an Array of All attributes to remove from JSON export
+# authStrategy is for webhooks / key is for bridges
+attrs_to_delete = env['ce']['remove_data_attributes'] ||
+  ["createdAt","createdBy","updatedAt","updatedBy","closedAt","closedBy","id","authStrategy","key","handle"]
 
 if options.exportCE
   #--------------------------------------------------------------------------
@@ -280,9 +280,9 @@ if options.exportCE
     puts "Exporting Submissions"
 
     # Loop over each Kapp in the forms to export map
-    formsToExport.keys.each do |kappSlug|
-      # Loop over each form slug in the formsToExport map for the given kapp
-      formsToExport[kappSlug].each do |formSlug|
+    forms_to_export.keys.each do |kappSlug|
+      # Loop over each form slug in the forms_to_export map for the given kapp
+      forms_to_export[kappSlug].each do |formSlug|
         # Build a data directory for the kapp
         dataDir = "#{ceDir}/kapp-#{kappSlug}/data"
         FileUtils.mkdir_p(dataDir, :mode => 0700)
@@ -297,11 +297,13 @@ if options.exportCE
         begin
           # Get submissions
           response = requestce_sdk.find_form_submissions(kappSlug, formSlug, params).content
-          count += response["submissions"].size
-          # Write each submission on its own line
-          response["submissions"].each do |submission|
-            # Append each submission (removing the submission unwanted attributes)
-            file.puts(JSON.generate(submission.delete_if { |key, value| attrsToDelete.member?(key)}))
+          if response.has_key?("submissions")
+            count += response["submissions"].size
+            # Write each submission on its own line
+            response["submissions"].each do |submission|
+              # Append each submission (removing the submission unwanted attributes)
+              file.puts(JSON.generate(submission.delete_if { |key, value| attrs_to_delete.member?(key)}))
+            end
           end
           params['pageToken'] = response['nextPageToken']
           # Get next page of submissions if there are more
@@ -332,11 +334,11 @@ if options.exportCE
       if json.kind_of?(Array)
         json.each do |element|
           if element.is_a?(Hash)
-            element.delete_if { |key, value| attrsToDelete.member?(key)}
+            element.delete_if { |key, value| attrs_to_delete.member?(key)}
           end
         end
       else
-        json.delete_if { |key, value| attrsToDelete.member?(key)}
+        json.delete_if { |key, value| attrs_to_delete.member?(key)}
       end
 
       # Scrub Discussion Id Attributes from export
