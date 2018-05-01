@@ -349,13 +349,13 @@ if options.importCE
     end
 
     # add teams
-    Parallel.each(Dir["#{request_ce_dir}/teams/*"]) do |team_file|
+    Dir["#{request_ce_dir}/teams/*"].each do |team_file|
       requestce_sdk_space.add_team(JSON.parse(File.read("#{team_file}")))
     end
 
     # add security policy definitions
     requestce_sdk_space.delete_space_security_policy_definitions
-    Parallel.each(JSON.parse(File.read("#{request_ce_dir}/securityPolicyDefinitions.json"))) do |policy|
+    JSON.parse(File.read("#{request_ce_dir}/securityPolicyDefinitions.json")).each do |policy|
       requestce_sdk_space.add_space_security_policy_definition(policy)
     end
 
@@ -366,7 +366,7 @@ if options.importCE
     requestce_sdk_space.delete_kapp("catalog");
 
     # Import Kapps
-    Parallel.each(Dir["#{request_ce_dir}/kapp-*"]) do |dirname|
+    Dir["#{request_ce_dir}/kapp-*"].each do |dirname|
 
       # Import Kapp
       kapp = JSON.parse(File.read("#{dirname}/kapp.json"))
@@ -388,19 +388,19 @@ if options.importCE
       requestce_sdk_space.add_kapp(kapp['name'], kapp_slug, kapp)
 
       # Add Categories
-      Parallel.each(JSON.parse(File.read("#{dirname}/categories.json"))) do |category|
+      JSON.parse(File.read("#{dirname}/categories.json")).each do |category|
         requestce_sdk_space.add_category_on_kapp(kapp_slug, category)
       end
 
       # Add Form Types
       requestce_sdk_space.delete_form_types_on_kapp(kapp_slug)
-      Parallel.each(JSON.parse(File.read("#{dirname}/formTypes.json"))) do |form_type|
+      JSON.parse(File.read("#{dirname}/formTypes.json")).each do |form_type|
         requestce_sdk_space.add_form_type_on_kapp(kapp_slug, form_type)
       end
 
       # Add Security Policy Definitions
       requestce_sdk_space.delete_security_policy_definitions(kapp_slug)
-      Parallel.each(JSON.parse(File.read("#{dirname}/securityPolicyDefinitions.json"))) do |policy|
+      JSON.parse(File.read("#{dirname}/securityPolicyDefinitions.json")).each do |policy|
         requestce_sdk_space.add_security_policy_definition(kapp_slug, {
           "name" => policy['name'],
           "message" => policy['message'],
@@ -410,7 +410,7 @@ if options.importCE
       end
 
       # Import Forms
-      Parallel.each(Dir["#{dirname}/forms/*"]) do |form|
+      Dir["#{dirname}/forms/*"].each do |form|
         requestce_sdk_space.add_form(kapp_slug, JSON.parse(File.read("#{form}")))
       end
 
@@ -437,18 +437,18 @@ if options.importCE
       end
 
       # Import Kapp Webhooks
-      Parallel.each(JSON.parse(File.read("#{dirname}/webhooks.json"))) do |webhook|
+      JSON.parse(File.read("#{dirname}/webhooks.json")).each do |webhook|
         requestce_sdk_space.add_webhook_on_kapp(kapp_slug, webhook)
       end
     end
 
     # Import Space Webhooks
-    Parallel.each(JSON.parse(File.read("#{request_ce_dir}/webhooks.json"))) do |webhook|
+    JSON.parse(File.read("#{request_ce_dir}/webhooks.json")).each do |webhook|
       requestce_sdk_space.add_space_webhook(webhook)
     end
 
     # Update Kinetic Task webhook URLs to point to the task server
-    Parallel.each(requestce_sdk_space.find_webhooks_on_space.content['webhooks']) do |webhook|
+    requestce_sdk_space.find_webhooks_on_space.content['webhooks'].each do |webhook|
       url = webhook['url']
       # if the webhook contains a Kinetic Task URL
       if url.include?('/kinetic-task/app/api/v1')
@@ -469,7 +469,7 @@ if options.importCE
         })
       end
     end
-    Parallel.each(requestce_sdk_space.find_kapps.content['kapps']) do |kapp|
+    requestce_sdk_space.find_kapps.content['kapps'].each do |kapp|
       requestce_sdk_space.find_webhooks_on_kapp(kapp['slug']).content['webhooks'].each do |webhook|
         url = webhook['url']
         # if the webhook contains a Kinetic Task URL
@@ -639,7 +639,7 @@ if options.importTask
     taskDir = "#{space_dir}/task"
 
     # Import space handlers
-    Parallel.each(Dir[taskDir+"/handlers/*"]) do |handler|
+    Dir[taskDir+"/handlers/*"].each do |handler|
 
       handler_file = File.new(handler, 'rb')
 
@@ -723,7 +723,7 @@ if options.importTask
     end
 
     # Import trees
-    Parallel.each(Dir[taskDir+"/trees/**/*"]) do |tree|
+    Dir[taskDir+"/trees/**/*"].each do |tree|
       unless File.directory?(tree)
         # Get the name of the directory
         source_name = File.dirname(tree).split("/").last
@@ -753,20 +753,20 @@ if options.importTask
     end
 
     # Import routines
-    Parallel.each(Dir[taskDir+"/routines/*"]) do |routine|
+    Dir[taskDir+"/routines/*"].each do |routine|
       unless File.directory?(routine)
         task_sdk.import_routine(File.new(routine, 'rb'), true)
       end
     end
 
     # Create Groups
-    Parallel.each(Dir[taskDir+"/groups/*"]) do |file|
+    Dir[taskDir+"/groups/*"].each do |file|
       group = JSON.parse(File.read(file))
       task_sdk.add_group(group['name']) if task_sdk.find_group(group['name']).status == 404
     end
 
     # Create Policy Rules
-    Parallel.each(Dir[taskDir+"/policyRules/*"]) do |file|
+    Dir[taskDir+"/policyRules/*"].each do |file|
       policy_rule = JSON.parse(File.read(file))
       if task_sdk.find_policy_rule(policy_rule).status == 404
         # create the policy rule
@@ -781,7 +781,7 @@ if options.importTask
     task_sdk.update_system_policy_rule("Allow All")
 
     # Create Categories
-    Parallel.each(Dir[taskDir+"/categories/*"]) do |file|
+    Dir[taskDir+"/categories/*"].each do |file|
       category = JSON.parse(File.read(file))
       if task_sdk.find_category(category['name']).status == 404
         # create the category
