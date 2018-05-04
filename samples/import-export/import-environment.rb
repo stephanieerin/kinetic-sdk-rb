@@ -206,7 +206,7 @@ signature_policy_rule = {
   "type" => "API Access",
   "rule" => "@auth.validateSignature('#{task_access_key['identifier']}')",
   "message" => "The request signature is invalid",
-  "consolePolicyRules": []
+  "consolePolicyRules" => []
 }
 
 # BridgeHub
@@ -254,7 +254,8 @@ if options.importCE
 
     # Create the space
     puts "Creating the \"#{space_slug}\" space"
-    requestce_sdk_system.add_space(space_name, space_slug)
+    response = requestce_sdk_system.add_space(space_name, space_slug)
+    raise "#{response.code} #{response.message}" if response.status != 200
 
     # Create a Space User that will be used with integrations (eg: Kinetic Task)
     puts "Adding the \"#{ce_integration_username}\" user to the \"#{space_slug}\" Request CE space."
