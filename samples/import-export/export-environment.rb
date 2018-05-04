@@ -207,7 +207,7 @@ if options.exportCE
     hasOwnFolder = ['kapps', 'bridges', 'models', 'teams']
     spaceObjects = space.reject {|k,v| !v.is_a?(Array) || includeWithSpace.include?(k) || hasOwnFolder.include?(k)}
     spaceObjects.each do | k, v |
-      File.open("#{ceDir}/#{k.slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
+      File.open("#{ceDir}/#{k}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
     end
 
     ## BRIDGES ##
@@ -262,7 +262,7 @@ if options.exportCE
             File.open("#{kappDir}/forms/#{form['slug']}.json", 'w') { |file| file.write(JSON.pretty_generate(form)) }
           end
         else
-          File.open("#{kappDir}/#{k.slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
+          File.open("#{kappDir}/#{k}.json", 'w') { |file| file.write(JSON.pretty_generate(v)) }
         end
       end
     end
