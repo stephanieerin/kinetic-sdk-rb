@@ -160,6 +160,60 @@ puts response.content         # Ruby Hash
 puts response.content_string  # JSON formatted response body
 ```
 
+## SSL Options
+
+Starting in Kinetic SDK version 0.0.2, server certificate validation is turned off by default.  In version 0.0.1 it was enabled, but this caused problems with self-signed certificates and there was no way to disable it.
+
+In version 0.0.2, there are now two additional options that can be passed when constructing the SDK object.
+
+* `ssl_verify_mode`: allows server certificate validation when the value `peer` is used. (default `none`).
+* `ssl_ca_file`: allows specifying the server certificate key file (PEM format). Used when server certificate validation is enabled (`ssl_verify_mode: "peer"`).
+
+May be used with all application SDKs.
+
+**Example 1 using Kinetic Request CE without server certificate validation:**
+
+```ruby
+space_sdk = KineticSdk::RequestCe.new({
+  ...
+  options: {}
+})
+```
+
+**Example 2 using Kinetic Request CE without server certificate validation:**
+
+```ruby
+space_sdk = KineticSdk::RequestCe.new({
+  ...
+  options: {
+    ssl_verify_mode: "none"
+  }
+})
+```
+
+**Example using Kinetic Request CE with server certificate validation and known CAs:**
+
+```ruby
+space_sdk = KineticSdk::RequestCe.new({
+  ...
+  options: {
+    ssl_verify_mode: "peer"
+  }
+})
+```
+
+**Example using Kinetic Request CE with server certificate validation and a self-signing CA:**
+
+```ruby
+space_sdk = KineticSdk::RequestCe.new({
+  ...
+  options: {
+    ssl_verify_mode: "peer",
+    ssl_ca_file: "/path/to/self-signing-ca.pem"
+  }
+})
+```
+
 ## Advanced Usage
 
 If you need to make a custom HTTP call for some reason, there is a class that allows you to do that. Simply make sure the KineticSdk is required in your program. See the [Getting Started Guide](docs/GettingStarted.md) for details.
