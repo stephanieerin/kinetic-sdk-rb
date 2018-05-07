@@ -24,6 +24,8 @@ module KineticSdk
     #   - +options+ - optional settings
     #     - +log_level+ - off | info | debug | trace (default: off)
     #     - +max_redirects+ - Fixnum (default: 10)
+    #     - +ssl_ca_file+ - full path to PEM certificate used to verify the server
+    #     - +ssl_verify_mode+ - none | peer (default: none)
     #
     # Example: configuration file
     #
@@ -38,7 +40,8 @@ module KineticSdk
     #       username: "admin",
     #       password: "admin",
     #       options: {
-    #         log_level: "debug"
+    #         log_level: "debug",
+    #         ssl_verify_mode: "none"
     #       }
     #     })
     #

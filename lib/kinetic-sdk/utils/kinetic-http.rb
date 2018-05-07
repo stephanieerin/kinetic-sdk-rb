@@ -3,6 +3,7 @@ require 'erb'
 require 'mime/types'
 require 'net/http'
 require 'net/http/post/multipart'
+require 'openssl'
 
 # The KineticSdk module contains functionality to interact with Kinetic Data applications
 # using their built-in REST APIs.
@@ -344,7 +345,15 @@ module KineticSdk
       def build_http(uri)
         http = Net::HTTP.new(uri.host, uri.port)
         http.set_debug_output($stdout) if trace?
-        http.use_ssl = (uri.scheme == 'https')
+        if (uri.scheme == 'https')
+          http.use_ssl = true
+          if (@options[:ssl_verify_mode].to_s.strip.downcase == 'peer')
+            http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+            http.ca_file = @options[:ssl_ca_file] if @options[:ssl_ca_file]
+          else
+            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          end
+        end
         http.read_timeout=60
         http.open_timeout=60
         http
