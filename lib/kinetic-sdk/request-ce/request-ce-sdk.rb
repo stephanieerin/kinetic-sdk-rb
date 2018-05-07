@@ -43,7 +43,8 @@ module KineticSdk
     #       password: "password",
     #       options: {
     #           log_level: "debug",
-    #           ssl_verify_mode: "none"
+    #           ssl_verify_mode: "peer",
+    #           ssl_ca_file: "/usr/local/self_signing_ca.pem"
     #       }
     #     })
     #
@@ -55,7 +56,8 @@ module KineticSdk
     #       password: "password",
     #       options: {
     #           log_level: "debug",
-    #           ssl_verify_mode: "none"
+    #           ssl_verify_mode: "peer",
+    #           ssl_ca_file: "/usr/local/self_signing_ca.pem"
     #       }
     #     })
     #

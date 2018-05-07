@@ -42,7 +42,8 @@ module KineticSdk
     #       options: {
     #         log_level: "debug",
     #         export_directory: "/opt/exports/task-server-a",
-    #         ssl_verify_mode: "none"
+    #         ssl_verify_mode: "peer",
+    #         ssl_ca_file: "/usr/local/self_signing_ca.pem"
     #       }
     #     })
     #
