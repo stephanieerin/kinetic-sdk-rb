@@ -49,7 +49,7 @@ module KineticSdk
       group_file = File.join(group_dir, "#{group['name'].slugify}.json")
       # write the file
       responseObj = get("#{@api_url}/groups/#{encode(group['name'])}", {}, headers)
-      File.write(group_file, JSON.pretty_generate(responseObj).content)
+      File.write(group_file, JSON.pretty_generate(responseObj.content))
       info("Exported group: #{group['name']} to #{group_file}")
     end
 
