@@ -82,8 +82,10 @@ module KineticSdk
       handler_dir = FileUtils::mkdir_p(File.join(@options[:export_directory], "handlers"))
       handler_file = File.join(handler_dir, "#{definition_id}.zip")
       # write the file
-     File.write(handler_file, get("#{@api_url}/handlers/#{definition_id}/zip", {}, headers).content_string)
-     info("Exported handler: #{definition_id} to #{handler_file}")
+      File.open(handler_file, "wb") do |file|
+        file.write get("#{@api_url}/handlers/#{definition_id}/zip", {}, headers).content_string
+      end
+      info("Exported handler: #{definition_id} to #{handler_file}")
     end
 
     # Export all handlers
