@@ -55,6 +55,24 @@ module KineticSdk
       post("#{@api_url}/spaceAttributeDefinitions", body, headers)
     end
 
+    # Add a new datastore form attribute definition.
+    #
+    # @param name [String] name of the attribute definition
+    # @param description [String] description of the attribute definition
+    # @param allows_multiple [Boolean] whether the attribute allows multiple values
+    # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def add_datastore_form_attribute_definition(name, description, allows_multiple, headers=default_headers)
+      body = {
+        "allowsMultiple" => allows_multiple,
+        "description" => description,
+        "name" => name
+      }
+      info("Adding Datastore Form attribute definition \"#{name}\" to the \"#{space_slug}\" space.")
+      # Create the attribute definition
+      post("#{@api_url}/datastoreFormAttributeDefinitions", body, headers)
+    end
+
     # Add a new category attribute definition.
     #
     # @param kapp_slug [String] slug of the kapp where the category exists
