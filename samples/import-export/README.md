@@ -57,6 +57,8 @@ Run the import script, passing in the appropriate options.
 #
 # -s <space_slug>   Slug of the space being imported.
 #
+# -n <space_name>   Name of the space being created.
+#
 # -c <config_file>  Name of the configuration file relative to the `config`
 #                   directory.  Note: the value should not be prefixed with
 #                   the config/ path.

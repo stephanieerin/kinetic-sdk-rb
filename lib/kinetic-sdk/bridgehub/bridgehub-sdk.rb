@@ -2,7 +2,7 @@ Dir[File.join(File.dirname(File.expand_path(__FILE__)), "lib", "**", "*.rb")].ea
 
 module KineticSdk
 
-  # Bridgehub is a Ruby class that acts as a wrapper for the Kinetic BridgeHub REST API 
+  # Bridgehub is a Ruby class that acts as a wrapper for the Kinetic BridgeHub REST API
   # without having to make explicit HTTP requests.
   class Bridgehub
 
@@ -46,7 +46,7 @@ module KineticSdk
     #       }
     #     })
     #
-    # If the +config_file+ option is present, it will be loaded first, and any additional 
+    # If the +config_file+ option is present, it will be loaded first, and any additional
     # options will overwrite any values in the config file
     #
     def initialize(opts)
@@ -62,7 +62,7 @@ module KineticSdk
       @options.merge!(opts[:options]) if opts[:options].is_a? Hash
       @username = opts[:username]
       @password = opts[:password]
-      @server = opts[:app_server_url]
+      @server = opts[:app_server_url].chomp('/')
       @api_url = "#{@server}/app/manage-api/v1"
       @version = 1
     end

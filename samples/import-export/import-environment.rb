@@ -108,7 +108,7 @@ class ImportOptions
           options.configureFH = true
           options.configureBH = true
         end
-          
+
       end
 
       opts.separator ""
@@ -319,16 +319,16 @@ if options.importCE
       'filehubUrl' => filehub_server
     }
     # add space attribute definitions
-    space['spaceAttributeDefinitions'] = 
+    space['spaceAttributeDefinitions'] =
       JSON.parse(File.read("#{request_ce_dir}/spaceAttributeDefinitions.json"))
     # add team attribute definitions
     space['teamAttributeDefinitions'] =
       JSON.parse(File.read("#{request_ce_dir}/teamAttributeDefinitions.json"))
     # add user attribute definitions
-    space['userAttributeDefinitions'] = 
+    space['userAttributeDefinitions'] =
       JSON.parse(File.read("#{request_ce_dir}/userAttributeDefinitions.json"))
     # add user profile attribute definitions
-    space['userProfileAttributeDefinitions'] = 
+    space['userProfileAttributeDefinitions'] =
       JSON.parse(File.read("#{request_ce_dir}/userProfileAttributeDefinitions.json"))
     # add bridges
     space['bridges'] = Dir["#{request_ce_dir}/bridges/bridges/*"].map do |bridge_file|
@@ -360,9 +360,6 @@ if options.importCE
       requestce_sdk_space.add_space_security_policy_definition(policy)
     end
 
-    # Set Company Name Attribute on Space
-    requestce_sdk_space.add_space_attribute("Company Name", "#{space_name}")
-
     # Delete OOTB Catalog Kapp
     requestce_sdk_space.delete_kapp("catalog");
 
@@ -378,11 +375,11 @@ if options.importCE
         JSON.parse(File.read("#{dirname}/categoryAttributeDefinitions.json"))
 
       # Add Form Attribute Definitions
-      kapp['formAttributeDefinitions'] = 
+      kapp['formAttributeDefinitions'] =
         JSON.parse(File.read("#{dirname}/formAttributeDefinitions.json"))
 
       # Add Kapp Attribute Definitions
-      kapp['kappAttributeDefinitions'] = 
+      kapp['kappAttributeDefinitions'] =
         JSON.parse(File.read("#{dirname}/kappAttributeDefinitions.json"))
 
       # Add the Kapp
@@ -432,7 +429,7 @@ if options.importCE
           })
           if (submissions_count += 1) % 25 == 0
             puts "Resetting the Request CE license submission count"
-            requestce_sdk_system.reset_license_count 
+            requestce_sdk_system.reset_license_count
           end
         end
       end
@@ -457,7 +454,7 @@ if options.importCE
         apiIndex = url.index('/app/api/v1')
         url = url.sub(url.slice(0..apiIndex-1), task_server)
         # update the webhook
-        requestce_sdk_space.update_webhook_on_space(webhook['name'], { 
+        requestce_sdk_space.update_webhook_on_space(webhook['name'], {
           "url" => url,
           # add the signature access key
           "authStrategy" => {
@@ -479,7 +476,7 @@ if options.importCE
           apiIndex = url.index('/app/api/v1')
           url = url.sub(url.slice(0..apiIndex-1), task_server)
           # update the webhook
-          requestce_sdk_space.update_webhook_on_kapp(kapp['slug'], webhook['name'], { 
+          requestce_sdk_space.update_webhook_on_kapp(kapp['slug'], webhook['name'], {
             "url" => url,
             # add the signature access key
             "authStrategy" => {

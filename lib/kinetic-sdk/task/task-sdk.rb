@@ -1,8 +1,8 @@
 Dir[File.join(File.dirname(File.expand_path(__FILE__)), "lib", "**", "*.rb")].each {|file| require file }
 
 module KineticSdk
-  
-  # Task is a Ruby class that acts as a wrapper for the Kinetic Task REST API 
+
+  # Task is a Ruby class that acts as a wrapper for the Kinetic Task REST API
   # without having to make explicit HTTP requests.
   class Task
 
@@ -11,7 +11,7 @@ module KineticSdk
 
     attr_reader :api_url, :api_v1_url, :config_user, :options, :server, :version, :username, :password
 
-    # Initalize the Task SDK with the web server URL and user credentials, 
+    # Initalize the Task SDK with the web server URL and user credentials,
     # along with any custom option values.
     #
     # @param opts [Hash] Kinetic Task properties
@@ -47,7 +47,7 @@ module KineticSdk
     #       }
     #     })
     #
-    # If the +config_file+ option is present, it will be loaded first, and any additional 
+    # If the +config_file+ option is present, it will be loaded first, and any additional
     # options will overwrite any values in the config file
     #
     def initialize(opts)
@@ -65,7 +65,7 @@ module KineticSdk
       @options.merge!(opts[:options]) if opts[:options].is_a? Hash
       @config_user[:username] = opts[:username]
       @config_user[:password] = opts[:password]
-      @server = opts[:app_server_url]
+      @server = opts[:app_server_url].chomp('/')
       @username = @config_user[:username]
       @password = @config_user[:password]
 

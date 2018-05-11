@@ -2,7 +2,7 @@ Dir[File.join(File.dirname(File.expand_path(__FILE__)), "lib", "**", "*.rb")].ea
 
 module KineticSdk
 
-  # RequestCe is a Ruby class that acts as a wrapper for the Kinetic Request CE REST API 
+  # RequestCe is a Ruby class that acts as a wrapper for the Kinetic Request CE REST API
   # without having to make explicit HTTP requests.
   class RequestCe
 
@@ -75,7 +75,7 @@ module KineticSdk
       @username = opts[:username]
       @password = opts[:password]
       @space_slug = opts[:space_slug]
-      @server = opts[:app_server_url]
+      @server = opts[:app_server_url].chomp('/')
       @api_url = @server + (@space_slug.nil? ? "/app/api/v1" : "/#{@space_slug}/app/api/v1")
       @version = 1
     end
