@@ -2,7 +2,7 @@ Dir[File.join(File.dirname(File.expand_path(__FILE__)), "lib", "**", "*.rb")].ea
 
 module KineticSdk
 
-  # Bridgehub is a Ruby class that acts as a wrapper for the Kinetic BridgeHub REST API
+  # Filehub is a Ruby class that acts as a wrapper for the Kinetic FileHub REST API
   # without having to make explicit HTTP requests.
   class Filehub
 
