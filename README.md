@@ -139,6 +139,30 @@ puts response.content         # Ruby Hash
 puts response.content_string  # JSON formatted response body
 ```
 
+### Kinetic Request CE SDK example of a Subdomain
+
+This example requires a proxy server configured to rewrite the space slug subdomain to the expected Request CE API route.
+
+```ruby
+space_sdk = KineticSdk::RequestCe.new({
+  space_server_url: "https://foo.myapp.io",
+  space_slug: "foo",
+  username: "space-user-1",
+  password: "password",
+  options: {
+    log_level: "info",
+    max_redirects: 3
+  }
+})
+response = space_sdk.find_kapps()
+kapps = response.content['kapps']
+
+puts response.code            # String value of HTTP response code ("200", "400", "500", etc...)
+puts response.status          # Ruby Fixnum value of response.code (200, 400, 500, etc...)
+puts response.content         # Ruby Hash
+puts response.content_string  # JSON formatted response body
+```
+
 ### Kinetic Task SDK example
 
 ```ruby

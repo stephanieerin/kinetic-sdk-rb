@@ -4,6 +4,7 @@ module KineticSdk
 
   # Bridgehub is a Ruby class that acts as a wrapper for the Kinetic BridgeHub REST API
   # without having to make explicit HTTP requests.
+  #
   class Bridgehub
 
     # Include the KineticHttpUtils module
@@ -15,25 +16,30 @@ module KineticSdk
     # credentials, along with any custom option values.
     #
     # @param opts [Hash] Kinetic BridgeHub properties
-    #   - +config_file+ - path to the YAML configuration file
-    #     - Ex: /opt/config/bridgehub-configuration1.yaml
-    #   - +app_server_url+ - the URL to the Kinetic BridgeHub web application.
-    #     - Ex: http://192.168.0.1:8080/kinetic-bridgehub
-    #   - +username+ - the username for the user
-    #   - +password+ - the password for the user
-    #   - +options+ - optional settings
-    #     - +log_level+ - off | info | debug | trace (default: off)
-    #     - +max_redirects+ - Fixnum (default: 10)
-    #     - +ssl_ca_file+ - full path to PEM certificate used to verify the server
-    #     - +ssl_verify_mode+ - none | peer (default: none)
+    # @option opts [String] :config_file optional - path to the YAML configuration file
     #
-    # Example: configuration file
+    #   * Ex: /opt/config/bridgehub-configuration1.yaml
+    #
+    # @option opts [String] :app_server_url the URL to the Kinetic Bridgehub web application.
+    #
+    #   * Ex: <http://192.168.0.1:8080/kinetic-bridgehub>
+    #
+    # @option opts [String] :username the username for the user
+    # @option opts [String] :password the password for the user
+    # @option opts [Hash<Symbol, Object>] :options ({}) optional settings
+    #
+    #   * :log_level (String) (_defaults to: off_) level of logging - off | info | debug | trace
+    #   * :max_redirects (Fixnum) (_defaults to: 10_) maximum number of redirects to follow
+    #   * :ssl_ca_file (String) full path to PEM certificate used to verify the server
+    #   * :ssl_verify_mode (String) (_defaults to: none_) - none | peer
+    #
+    # Example: using a configuration file
     #
     #     KineticSdk::Bridgehub.new({
     #       config_file: "/opt/config1.yaml"
     #     })
     #
-    # Example: properties hash
+    # Example: using a properties hash
     #
     #     KineticSdk::Bridgehub.new({
     #       app_server_url: "http://localhost:8080/kinetic-bridgehub",
@@ -51,18 +57,21 @@ module KineticSdk
     #
     def initialize(opts)
       # initialize any variables
-      @options = {}
+      options = {}
 
       # process the configuration file if it was provided
       unless opts[:config_file].nil?
-        @options.merge!(YAML::load opts[:config_file])
+        options.merge!(YAML::load opts[:config_file])
       end
 
+      # process the configuration hash if it was provided
+      options.merge!(opts)
+
       # process any individual options
-      @options.merge!(opts[:options]) if opts[:options].is_a? Hash
-      @username = opts[:username]
-      @password = opts[:password]
-      @server = opts[:app_server_url].chomp('/')
+      @options = options.delete(:options)
+      @username = options[:username]
+      @password = options[:password]
+      @server = options[:app_server_url].chomp('/')
       @api_url = "#{@server}/app/manage-api/v1"
       @version = 1
     end
