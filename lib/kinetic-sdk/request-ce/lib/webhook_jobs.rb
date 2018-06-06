@@ -19,7 +19,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def find_kapp_webhook_jobs(kapp_slug, params={}, headers=default_headers)
       info("Finding webhook jobs in the \"#{kapp_slug}\" Kapp")
-      get("#{@api_url}/kapps/#{kapp_slug}/webhooksJobs", params, headers)
+      get("#{@api_url}/kapps/#{kapp_slug}/webhookJobs", params, headers)
     end
 
     # Update space webhook job
@@ -45,7 +45,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_space_webhook_job(job_id, job_properties={}, headers=default_headers)
       info("Updating the webhook job #{job_id} in Space")
-      put("#{@api_url}/webhooksJobs/#{job_id}", job_properties, headers)
+      put("#{@api_url}/webhookJobs/#{job_id}", job_properties, headers)
     end
 
 
@@ -73,7 +73,7 @@ module KineticSdk
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
     def update_kapp_webhook_job(kapp_slug, job_id, job_properties={}, headers=default_headers)
       info("Updating the webhook job #{job_id} in the \"#{kapp_slug}\" Kapp")
-      put("#{@api_url}/kapps/#{kapp_slug}/webhooksJobs/#{job_id}", job_properties, headers)
+      put("#{@api_url}/kapps/#{kapp_slug}/webhookJobs/#{job_id}", job_properties, headers)
     end
 
   end
