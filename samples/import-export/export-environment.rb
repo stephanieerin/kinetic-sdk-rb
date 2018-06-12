@@ -123,14 +123,13 @@ space_dir = "#{pwd}/exports/#{space_slug}"
 FileUtils.mkdir_p(space_dir, :mode => 0700) unless Dir.exist?(space_dir)
 Dir.chdir(space_dir)
 
-# Build mapping of kapp/forms to export submissions for
-forms_to_export = env['ce']['export_form_data'] || 
-  { "admin" => [ 'notification-template-dates', 'notification-data', 'registered-images' ] }
+# Build mapping of kapp/forms/datastores to export submissions for
+forms_to_export = env['ce']['export_form_data'] || {}
+datastore_forms_to_export = env['ce']['export_datastore_form_data'] || []
 
 # Build an Array of All attributes to remove from JSON export
 # authStrategy is for webhooks / key is for bridges
-attrs_to_delete = env['ce']['remove_data_attributes'] ||
-  ["createdAt","createdBy","updatedAt","updatedBy","closedAt","closedBy","id","authStrategy","key","handle"]
+attrs_to_delete = env['ce']['remove_data_attributes']
 
 if options.exportCE
   #--------------------------------------------------------------------------
@@ -146,7 +145,7 @@ if options.exportCE
   }
   # Get the Request CE space user credentials from the config file
   ce_credentials_space_admin = {
-    "username" => KineticSdk::Utils::Random.simple,
+    "username" => "kinops-export@kinops.io",
     "password" => KineticSdk::Utils::Random.simple
   }
   ce_task_source_name = env["ce"]["task_source_name"]
@@ -200,7 +199,7 @@ if options.exportCE
 
     # Create space.json (All Arrays except attributes and security policies should be excluded)
     includeWithSpace = ['attributes', 'securityPolicies'];
-    spaceJson = JSON.pretty_generate(space.reject {|k,v| v.is_a?(Array) && !includeWithSpace.include?(k)})
+    spaceJson = JSON.pretty_generate(space.reject {|k,v| (v.is_a?(Array) || k === 'datastore') && !includeWithSpace.include?(k)})
     File.open("#{ceDir}/space.json", 'w') { |file| file.write(spaceJson) }
 
     # Loop over the rest of the space objects and create files for them
@@ -228,14 +227,17 @@ if options.exportCE
       File.open("#{ceDir}/bridges/bridgeModels/#{obj['name'].slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
     end
 
+    ## DATASTORE FORMS ##
+    if space["datastore"]["forms"].size > 0
+      puts "Building Datastore Form Structure"
+      Dir.mkdir("#{ceDir}/datastore", 0700) unless Dir.exist?("#{ceDir}/datastore")
+      Dir.chdir("#{ceDir}/datastore")
 
-    ## TEAMS ##
-    puts "Building Teams Directory Structure"
-    Dir.mkdir("#{ceDir}/teams", 0700) unless Dir.exist?("#{ceDir}/teams")
-    Dir.chdir("#{ceDir}/teams")
-    teams_array = requestce_sdk.find_teams({"include" => "details,attributes"}).content["teams"]
-    teams_array.each do |obj|
-      File.open("#{ceDir}/teams/#{obj['name'].slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+      Dir.mkdir("#{ceDir}/datastore/forms", 0700) unless Dir.exist?("#{ceDir}/datastore/forms")
+      Dir.chdir("#{ceDir}/datastore/forms")
+      space["datastore"]["forms"].each do |obj|
+        File.open("#{ceDir}/datastore/forms/#{obj['name'].slugify}.json", 'w') { |file| file.write(JSON.pretty_generate(obj)) }
+      end
     end
 
     ## KAPPS ##
@@ -311,6 +313,37 @@ if options.exportCE
         # Close the submissions file
         file.close()
       end
+    end
+
+    # Loop over each form slug in the forms_to_export map for the given kapp
+    datastore_forms_to_export.each do |formSlug|
+      # Build a data directory for the kapp
+      dataDir = "#{ceDir}/datastore/data"
+      FileUtils.mkdir_p(dataDir, :mode => 0700)
+      # Build params to pass to the retrieve_form_submissions method
+      params = {"include" => "values", "limit" => 1000, "direction" => "ASC"}
+      # Open the submissions file in write mode
+      file = File.open("#{dataDir}/#{formSlug}.json", 'w');
+      # Ensure the file is empty
+      file.truncate(0)
+      response = nil
+      count = 0
+      begin
+        # Get submissions
+        response = requestce_sdk.find_all_form_datastore_submissions(formSlug, params).content
+        if response.has_key?("submissions")
+          count += response["submissions"].size
+          # Write each submission on its own line
+          response["submissions"].each do |submission|
+            # Append each submission (removing the submission unwanted attributes)
+            file.puts(JSON.generate(submission.delete_if { |key, value| attrs_to_delete.member?(key)}))
+          end
+        end
+        params['pageToken'] = response['nextPageToken']
+        # Get next page of submissions if there are more
+      end while !response.nil? && !response['nextPageToken'].nil?
+      # Close the submissions file
+      file.close()
     end
 
     ################################################################

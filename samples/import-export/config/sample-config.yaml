@@ -21,6 +21,21 @@ ce:
   filestore:
     type: "Local"
     directory: "/home/filesDirectory"
+  export_form_data:
+  export_datastore_form_data:
+    - "notification-template-dates"
+    - "notification-data"
+  remove_data_attributes:
+    - "createdAt"
+    - "createdBy"
+    - "updatedAt"
+    - "updatedBy"
+    - "closedAt"
+    - "closedBy"
+    - "id"
+    - "authStrategy"
+    - "key"
+    - "handle"
 
 # Properties for Kinetic Task
 task:
@@ -29,8 +44,8 @@ task:
     username: "admin"
     password: "admin"
   oauth:
-    endpoint_server: 
-    redirect_endpoint_server: 
+    endpoint_server:
+    redirect_endpoint_server:
   api_access_key_description: "Request CE"
   api_access_key_identifier: "request-ce"
 
