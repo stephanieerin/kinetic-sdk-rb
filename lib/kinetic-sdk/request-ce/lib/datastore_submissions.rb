@@ -142,5 +142,16 @@ module KineticSdk
       put("#{@api_url}/datastore/submissions/#{encode(submission_id)}", body, headers)
     end
 
+
+    # Delete a Datastore submission
+    #
+    # @param submission_id [String] String value of the Submission Id (UUID)
+    # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def delete_datastore_submission(submission_id, headers=default_headers)
+      info("Deleting Datastore Submission \"#{submission_id}\"")
+      delete("#{@api_url}/datastore/submissions/#{encode(submission_id)}", headers)
+    end
+
   end
 end
