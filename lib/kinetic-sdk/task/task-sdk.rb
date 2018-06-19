@@ -4,6 +4,7 @@ module KineticSdk
 
   # Task is a Ruby class that acts as a wrapper for the Kinetic Task REST API
   # without having to make explicit HTTP requests.
+  #
   class Task
 
     # Include the KineticHttpUtils module
@@ -14,26 +15,31 @@ module KineticSdk
     # Initalize the Task SDK with the web server URL and user credentials,
     # along with any custom option values.
     #
-    # @param opts [Hash] Kinetic Task properties
-    #   - +config_file+ - path to the YAML configuration file
-    #     - Ex: /opt/config/task-configuration1.yaml
-    #   - +app_server_url+ - the URL to the Kinetic Task web application.
-    #     - Ex: http://192.168.0.1:8080/kinetic-task
-    #   - +username+ - the username for the user
-    #   - +password+ - the password for the user
-    #   - +options+ - optional settings
-    #     - +log_level+ - off | info | debug | trace (default: off)
-    #     - +max_redirects+ - Fixnum (default: 10)
-    #     - +ssl_ca_file+ - full path to PEM certificate used to verify the server
-    #     - +ssl_verify_mode+ - none | peer (default: none)
+    # @param [Hash] opts Kinetic Task properties
+    # @option opts [String] :config_file optional - path to the YAML configuration file
     #
-    # Example: configuration file
+    #   * Ex: /opt/config/task-configuration1.yaml
+    #
+    # @option opts [String] :app_server_url the URL to the Kinetic Task web application.
+    #
+    #   * Ex: <http://192.168.0.1:8080/kinetic-task>
+    #
+    # @option opts [String] :username the username for the user
+    # @option opts [String] :password the password for the user
+    # @option opts [Hash<Symbol, Object>] :options ({}) optional settings
+    #
+    #   * :log_level (String) (_defaults to: off_) level of logging - off | info | debug | trace
+    #   * :max_redirects (Fixnum) (_defaults to: 10_) maximum number of redirects to follow
+    #   * :ssl_ca_file (String) full path to PEM certificate used to verify the server
+    #   * :ssl_verify_mode (String) (_defaults to: none_) - none | peer
+    #
+    # Example: using a configuration file
     #
     #     KineticSdk::Task.new({
     #       config_file: "/opt/config1.yaml"
     #     })
     #
-    # Example: properties hash
+    # Example: using a properties hash
     #
     #     KineticSdk::Task.new({
     #       app_server_url: "http://localhost:8080/kinetic-task",
@@ -52,20 +58,23 @@ module KineticSdk
     #
     def initialize(opts)
       # initialize any variables
-      @options = {}
+      options = {}
       @config_user = {}
       @server = nil
 
       # process the configuration file if it was provided
       unless opts[:config_file].nil?
-        @options.merge!(YAML::load opts[:config_file])
+        options.merge!(YAML::load opts[:config_file])
       end
 
+      # process the configuration hash if it was provided
+      options.merge!(opts)
+
       # process any individual options
-      @options.merge!(opts[:options]) if opts[:options].is_a? Hash
-      @config_user[:username] = opts[:username]
-      @config_user[:password] = opts[:password]
-      @server = opts[:app_server_url].chomp('/')
+      @options = options.delete(:options)
+      @config_user[:username] = options[:username]
+      @config_user[:password] = options[:password]
+      @server = options[:app_server_url].chomp('/')
       @username = @config_user[:username]
       @password = @config_user[:password]
 
