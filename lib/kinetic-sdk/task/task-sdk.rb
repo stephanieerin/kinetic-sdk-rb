@@ -71,7 +71,7 @@ module KineticSdk
       options.merge!(opts)
 
       # process any individual options
-      @options = options.delete(:options)
+      @options = options.delete(:options) || {}
       @config_user[:username] = options[:username]
       @config_user[:password] = options[:password]
       @server = options[:app_server_url].chomp('/')

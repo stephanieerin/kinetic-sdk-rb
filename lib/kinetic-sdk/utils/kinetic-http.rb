@@ -379,6 +379,7 @@ module KineticSdk
       def initialize(username=nil, password=nil)
         @username = username
         @password = password
+        @options = {}
       end
 
     end
