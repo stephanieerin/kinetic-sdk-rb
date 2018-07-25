@@ -1,0 +1,17 @@
+# SDK log level (off | info | debug | trace)
+sdk_log_level: "info"
+
+# Properties for the Kinetic Request CE
+ce:
+  server: "http://localhost:8080/kinetic"
+  space_admin_credentials:
+    username: "kdadmin"
+    password: "admin"
+
+# User Cleanup Config
+strings_to_mask:
+  - "please-remove-me"
+  - "please-remove-me@example.com"
+  - "Please Remove Me"
+user_to_mask: "please-remove-me"
+masked_replacement_value: "********************"
