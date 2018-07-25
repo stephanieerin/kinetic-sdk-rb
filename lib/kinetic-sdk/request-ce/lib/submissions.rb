@@ -56,7 +56,7 @@ module KineticSdk
     #   - +values+ - hash of field values for the submission
     # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
     # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
-    def patch_submission(kapp_slug, form_slug, payload={}, headers=default_headers)
+    def patch_new_submission(kapp_slug, form_slug, payload={}, headers=default_headers)
       # set the currentPage hash if currentPage was passed as a string
       payload["currentPage"] = { "name" => payload["currentPage"] } if payload["currentPage"].is_a? String
       # initialize "values" if nil
@@ -68,6 +68,29 @@ module KineticSdk
       # Create the submission
       info("Patching a submission in the \"#{form_slug}\" Form.")
       patch("#{@api_url}/kapps/#{kapp_slug}/forms/#{form_slug}/submissions", payload, headers)
+    end
+
+    # Patch an existing Submission
+    #
+    # @param submission_id [String] id of the Submission
+    # @param payload [Hash] payload of the submission
+    #   - +origin+ - Origin ID of the submission to be patched
+    #   - +parent+ - Parent ID of the submission to be patched
+    #   - +values+ - hash of field values for the submission
+    # @param headers [Hash] hash of headers to send, default is basic authentication and JSON content type
+    # @return [KineticSdk::Utils::KineticHttpResponse] object, with +code+, +message+, +content_string+, and +content+ properties
+    def patch_existing_submission(submission_id, payload={}, headers=default_headers)
+      # set the currentPage hash if currentPage was passed as a string
+      payload["currentPage"] = { "name" => payload["currentPage"] } if payload["currentPage"].is_a? String
+      # initialize "values" if nil
+      payload["values"] = {} if payload["values"].nil?
+      # set origin hash if origin was passed as a string
+      payload["origin"] = { "id" => payload["origin"] } if payload["origin"].is_a? String
+      # set parent hash if parent was passed as a string
+      payload["parent"] = { "id" => payload["parent"] } if payload["parent"].is_a? String
+      # Create the submission
+      info("Patching a submission with id \"#{submission_id}\"")
+      patch("#{@api_url}/submissions/#{submission_id}", payload, headers)
     end
 
     # Find all Submissions for a form.
