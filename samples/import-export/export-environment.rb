@@ -228,7 +228,7 @@ if options.exportCE
     end
 
     ## DATASTORE FORMS ##
-    if space["datastore"]["forms"].size > 0
+    if !space["datastore"].nil? && space["datastore"]["forms"].size > 0
       puts "Building Datastore Form Structure"
       Dir.mkdir("#{ceDir}/datastore", 0700) unless Dir.exist?("#{ceDir}/datastore")
       Dir.chdir("#{ceDir}/datastore")
@@ -381,7 +381,7 @@ if options.exportCE
 
       # Replace Space Name and Space Slug References
       updatedData = JSON.pretty_generate(json)
-      replacements.each {|replacement| updatedData.gsub!(/\b(#{replacement[0]})\b/, replacement[1])}
+      # replacements.each {|replacement| updatedData.gsub!(/\b(#{replacement[0]})\b/, replacement[1])}
         File.open("#{filename}", 'w') { |file| file.write(updatedData) }
       end
     end

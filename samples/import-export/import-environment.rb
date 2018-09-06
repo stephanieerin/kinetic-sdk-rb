@@ -334,13 +334,14 @@ if options.importCE
     space['bridges'] = Dir["#{request_ce_dir}/bridges/bridges/*"].map do |bridge_file|
       JSON.parse(File.read("#{bridge_file}")).delete_if { |k,v| k == "key" }
     end
-
+=begin
     # exporter substitutes the original space slug with `<space-slug>`
     (space['attributes'] || []).collect! do |a|
       { "name" => a['name'],
         "values" => a['values'].collect! { |v| v.to_s.gsub("<space-slug>", space_slug) }
       }
     end
+=end
     # update the space
     requestce_sdk_space.update_space(space)
 
@@ -504,7 +505,7 @@ if options.importCE
     requestce_sdk_space.update_bridge("Kinetic Core", {
       "url" => "#{bridgehub_server}/app/api/v1/bridges/#{bridge_slug}/"
     })
-
+=begin
     # Create the oauth client for Kinetic Task
     task_oauth = {
       "name" => "Kinetic Task - #{space_slug}",
@@ -518,6 +519,7 @@ if options.importCE
     else
       requestce_sdk_space.update_oauth_client(task_oauth['clientId'], task_oauth)
     end
+=end
   else
     puts "The #{space_slug} space already exists, skipping Request CE import."
   end
@@ -614,7 +616,7 @@ if options.importTask
         "Proxy Password (Space Admin)" => ce_integration_password
       }
     })
-
+=begin
     # Update the authentication
     task_sdk.update_authentication({
       "authenticator" => "com.kineticdata.core.v1.authenticators.OAuthAuthenticator",
@@ -632,7 +634,7 @@ if options.importTask
         "Scope" => "full_access"
       }
     })
-
+=end
     # Locate Task Import Directory
     taskDir = "#{space_dir}/task"
 
